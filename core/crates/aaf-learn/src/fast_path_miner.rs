@@ -2,7 +2,7 @@
 //!
 //! Watches agent-assisted observations for recurring patterns. When
 //! the same `(intent_type, domain, constraint-key-set)` tuple recurs
-//! more than `threshold` times, proposes a new [`FastPathRule`]-shaped
+//! more than `threshold` times, proposes a new `FastPathRule`-shaped
 //! [`LearnedRule`] gated by the approval workflow (Rule 18).
 //!
 //! Adversarial traffic detection (E1 §2.8): patterns whose evidence

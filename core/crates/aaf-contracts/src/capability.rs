@@ -90,7 +90,7 @@ pub struct CapabilitySla {
     /// 99th percentile latency in ms.
     #[serde(default)]
     pub latency_p99_ms: u64,
-    /// Availability target in [0,1].
+    /// Availability target in \[0,1\].
     #[serde(default)]
     pub availability: f64,
 }

@@ -57,7 +57,7 @@ impl ScoreHistory {
         event.delta()
     }
 
-    /// Override rate within [0,1] (0 if no executions).
+    /// Override rate within \[0,1\] (0 if no executions).
     pub fn override_rate(&self) -> f64 {
         if self.total == 0 {
             0.0

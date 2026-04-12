@@ -43,7 +43,7 @@ pub struct BudgetTracker {
 }
 
 impl BudgetTracker {
-    /// Construct from an [`IntentEnvelope::budget`].
+    /// Construct from an `IntentEnvelope::budget`.
     pub fn new(budget: BudgetContract) -> Self {
         Self {
             inner: Arc::new(Mutex::new(BudgetState {

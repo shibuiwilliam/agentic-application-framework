@@ -4,7 +4,7 @@
 //! Attestation is *orthogonal* to the manifest signature itself.
 //! The manifest signature proves "this manifest was produced by the
 //! agent's own key". The attestation proves "*some trusted party*
-//! reviewed this manifest and graded it as [`AttestationLevel::X`]".
+//! reviewed this manifest and graded it as `AttestationLevel::X`".
 //! The runtime can require a minimum attestation level before
 //! serving a capability (`CapabilityContract.required_attestation_level`).
 

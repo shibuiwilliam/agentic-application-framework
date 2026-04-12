@@ -184,7 +184,7 @@ pub struct Observation {
     pub reasoning: String,
     /// Final decision string.
     pub decision: String,
-    /// Confidence in [0,1].
+    /// Confidence in \[0,1\].
     pub confidence: f64,
     /// Alternative interpretations the agent considered.
     #[serde(default)]

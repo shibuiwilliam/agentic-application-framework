@@ -30,7 +30,7 @@ pub struct LineageRecord {
     pub derived_from: Vec<EntityRefVersioned>,
     /// Capability that produced it.
     pub producing_capability: CapabilityId,
-    /// Trace id (links back to [`aaf_trace::Recorder`]).
+    /// Trace id (links back to `aaf_trace::Recorder`).
     pub trace_id: TraceId,
     /// When.
     pub created_at: DateTime<Utc>,

@@ -62,12 +62,12 @@ impl TrustScore {
         }
     }
 
-    /// Clamp the score into [0,1].
+    /// Clamp the score into \[0,1\].
     pub fn clamped(value: f64) -> f64 {
         if value.is_nan() {
             0.0
         } else {
-            value.max(0.0).min(1.0)
+            value.clamp(0.0, 1.0)
         }
     }
 }

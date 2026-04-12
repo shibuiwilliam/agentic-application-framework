@@ -1,7 +1,7 @@
 //! AAF trace recorder.
 //!
 //! Implements **Rule 12 — Trace Everything**: every node execution emits an
-//! [`Observation`] which is rolled up into an append-only [`ExecutionTrace`].
+//! `Observation` which is rolled up into an append-only `ExecutionTrace`.
 //!
 //! This crate exposes a [`TraceRecorder`] handle that the runtime, planner,
 //! intent compiler, and saga engine all clone via `Arc`. The default

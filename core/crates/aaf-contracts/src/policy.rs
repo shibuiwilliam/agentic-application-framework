@@ -1,5 +1,5 @@
 //! Policy contract — kinds, severities, and decision shapes used by
-//! the [`crate`][crate]'s policy engine and downstream consumers.
+//! the [`crate`]'s policy engine and downstream consumers.
 
 use serde::{Deserialize, Serialize};
 

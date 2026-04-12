@@ -13,7 +13,7 @@
 //! | Rule | Where |
 //! |---|---|
 //! | 22 Identity is cryptographic, not nominal | [`did::AgentDid`] is derived from a verifying key; never constructed from a bare string by callers. |
-//! | 23 Every deployed agent has a signed manifest | [`manifest::AgentManifest::build`] is the only constructor — it signs at the end and the signature is verified on load. |
+//! | 23 Every deployed agent has a signed manifest | [`manifest::ManifestBuilder::build`] is the only constructor — it signs at the end and the signature is verified on load. |
 //! | 24 Provenance is a bill of materials | [`sbom::AgentSbom`] enumerates every input (model, prompts, tools, ontology refs, eval suites) with content hashes. |
 //!
 //! # Signature backend

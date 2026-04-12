@@ -40,7 +40,7 @@ pub struct Artifact {
     pub rendered: Option<String>,
     /// Provenance record.
     pub provenance: ArtifactProvenance,
-    /// Confidence in [0,1].
+    /// Confidence in \[0,1\].
     #[serde(default)]
     pub confidence: f64,
     /// Policy tags (e.g. `internal`, `no-pii`).

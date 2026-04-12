@@ -3,7 +3,7 @@
 //! Observes routing decision outcomes and accumulates
 //! per-`(intent_type, risk_tier)` quality/cost statistics. After
 //! a configurable observation window, proposes weight adjustments
-//! that the caller can install into a [`LearnedRoutingPolicy`].
+//! that the caller can install into a `LearnedRoutingPolicy`.
 
 use aaf_contracts::{Observation, OutcomeStatus};
 use aaf_trace::TraceSubscriber;

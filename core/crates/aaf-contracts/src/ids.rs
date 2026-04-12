@@ -97,17 +97,17 @@ id_type!(
 id_type!(
     EventId,
     "evt",
-    "Identifier for an [`AppEvent`](crate::surface) emitted by an application surface."
+    "Identifier for an `AppEvent` emitted by an application surface."
 );
 id_type!(
     ProposalId,
     "prop",
-    "Identifier for an [`ActionProposal`](crate::surface) emitted by the runtime."
+    "Identifier for an `ActionProposal` emitted by the runtime."
 );
 id_type!(
     ProjectionId,
     "proj",
-    "Identifier for a [`StateProjection`](crate::surface) visible to a caller."
+    "Identifier for a `StateProjection` visible to a caller."
 );
 id_type!(
     SessionId,

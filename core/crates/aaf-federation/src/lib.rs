@@ -5,7 +5,7 @@
 //! - [`FederationAgreement`] — bilateral / multilateral data sharing
 //!   contract, expressible in **entity space** (E2 Slice C) as well
 //!   as the legacy field-name space
-//! - [`Boundary`] — see [`Router::enforce_outbound`] and the new
+//! - Boundary enforcement — see [`Router::enforce_outbound`] and the new
 //!   [`Router::enforce_capability`] / [`Router::enforce_outbound_entity`]
 //!   helpers
 //! - [`Router`] — chooses a destination cell for a target capability
