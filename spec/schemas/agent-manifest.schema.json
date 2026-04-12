@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/agent-manifest.json",
+  "title": "Agent Manifest",
+  "description": "Signed declaration of an AAF agent (Rule 23).",
+  "type": "object",
+  "required": [
+    "did",
+    "display_name",
+    "source_hash",
+    "model_pins",
+    "prompt_hashes",
+    "tool_bindings",
+    "ontology_slices",
+    "capability_allow_list",
+    "eval_suite_refs",
+    "issued_at",
+    "signature"
+  ],
+  "properties": {
+    "did": {
+      "type": "string",
+      "pattern": "^did:aaf:[0-9a-f]{8,}$"
+    },
+    "display_name": { "type": "string" },
+    "source_hash": { "type": "string", "pattern": "^[0-9a-f]{8,}$" },
+    "model_pins": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["provider", "model", "system_prompt_hash"],
+        "properties": {
+          "provider": { "type": "string" },
+          "model":    { "type": "string" },
+          "system_prompt_hash": { "type": "string" }
+        }
+      }
+    },
+    "prompt_hashes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "tool_bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["tool_id", "version", "interface_hash"],
+        "properties": {
+          "tool_id": { "type": "string" },
+          "version": { "type": "string" },
+          "interface_hash": { "type": "string" }
+        }
+      }
+    },
+    "ontology_slices": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "capability_allow_list": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "eval_suite_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "signature": { "type": "string", "pattern": "^[0-9a-f]+$" }
+  }
+}

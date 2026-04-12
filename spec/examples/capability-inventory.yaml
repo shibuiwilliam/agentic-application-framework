@@ -1,0 +1,68 @@
+id: cap-inventory-check
+name: 在庫照会
+description: 指定されたSKUまたはカテゴリの現在の在庫数を返す
+version: 2.1.0
+provider_agent: inventory-agent
+
+endpoint:
+  type: grpc
+  address: inventory-service:50051
+  method: CheckStock
+
+input_schema:
+  type: object
+  properties:
+    skus:
+      type: array
+      items: { type: string }
+      maxItems: 100
+    include_reserved: { type: boolean, default: false }
+
+output_schema:
+  type: object
+  properties:
+    items:
+      type: array
+
+side_effect: read
+idempotent: true
+reversible: true
+deterministic: true
+
+sla:
+  latency_p50_ms: 50
+  latency_p99_ms: 200
+  availability: 0.999
+
+cost:
+  per_request: 0.001
+  currency: USD
+
+required_scope: inventory:read
+data_classification: internal
+
+degradation:
+  - level: full
+    description: リアルタイム全倉庫
+  - level: partial
+    trigger: primary_db_slow
+    description: 主要倉庫のみ、15分遅延
+  - level: cached
+    trigger: db_unreachable
+    description: 最大1時間前のキャッシュ
+  - level: unavailable
+    description: データベースに到達できず、キャッシュも期限切れのためフォールバックのみ
+    fallback: 手動確認を依頼
+
+depends_on: []
+conflicts_with: []
+fast_path_rules: []
+
+# E2 Slice B/C — entity-space declarations. The planner's composition
+# checker, the policy boundary rule, and long-term memory retrieval
+# all key off these nouns.
+reads:
+  - entity_id: commerce.Inventory
+  - entity_id: commerce.Product
+emits: []
+writes: []

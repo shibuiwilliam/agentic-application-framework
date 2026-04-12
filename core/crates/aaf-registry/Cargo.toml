@@ -1,0 +1,19 @@
+[package]
+name = "aaf-registry"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Capability Registry: CRUD, discovery, health tracking, degradation state machine, versioning."
+
+[dependencies]
+aaf-contracts = { workspace = true }
+aaf-storage = { workspace = true }
+aaf-trust = { workspace = true }
+async-trait = { workspace = true }
+parking_lot = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+chrono = { workspace = true }

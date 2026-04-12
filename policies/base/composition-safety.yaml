@@ -1,0 +1,9 @@
+id: composition-safety
+kind: composition_safety
+severity: warning
+description: |
+  Limits the number of write-class side effects that may compose into
+  one execution graph. Emergent risk grows non-linearly with the number
+  of writes; this rule caps it explicitly.
+params:
+  max_combined_writes: 3

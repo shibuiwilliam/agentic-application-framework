@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/entity.json",
+  "title": "Entity",
+  "type": "object",
+  "required": ["id", "version", "description", "classification"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Dot-qualified id, e.g. commerce.Order"
+    },
+    "version": {
+      "type": "object",
+      "required": ["major", "minor", "patch"],
+      "properties": {
+        "major": { "type": "integer", "minimum": 0 },
+        "minor": { "type": "integer", "minimum": 0 },
+        "patch": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "description": { "type": "string" },
+    "classification": {
+      "oneOf": [
+        { "type": "string", "enum": ["public", "internal", "pii"] },
+        {
+          "type": "object",
+          "required": ["regulated"],
+          "properties": {
+            "regulated": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "owner_service": { "type": "string" },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "field_type"],
+        "properties": {
+          "name": { "type": "string" },
+          "field_type": {},
+          "required": { "type": "boolean" },
+          "classification": {
+            "oneOf": [
+              { "type": "string", "enum": ["public", "internal", "pii"] },
+              {
+                "type": "object",
+                "required": ["regulated"],
+                "properties": {
+                  "regulated": { "type": "string" }
+                }
+              }
+            ]
+          },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "from", "to", "cardinality"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["has_one", "has_many", "references", "derived_from"]
+          },
+          "from": { "type": "string" },
+          "to":   { "type": "string" },
+          "cardinality": {
+            "type": "string",
+            "enum": ["exactly_one", "zero_or_one", "zero_or_many", "one_or_many"]
+          },
+          "description": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# AAF pre-push hook
+#
+# Runs the full CI gate before pushing. This is heavier than the
+# pre-commit hook (includes tests + ontology lint) but catches
+# everything before code leaves the local machine.
+#
+# Install with:
+#   git config core.hooksPath .githooks
+
+set -euo pipefail
+
+echo "==> make ci"
+make ci
+
+echo "==> all pre-push checks passed"

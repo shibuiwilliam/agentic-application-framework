@@ -1,0 +1,31 @@
+proposal_id: prop-abc123
+intent_id: int-abc123
+trace_id: trace-abc123
+tenant_id: tenant-a
+summary: Update shipping address on order ord-42
+rationale: |
+  The address in the current order (ord-42) does not match the
+  customer's default. The agent suggests adopting the default.
+mutations:
+  - entity_ref:
+      entity_id: commerce.Order
+      version: { major: 0, minor: 1, patch: 0 }
+      tenant: tenant-a
+      local_id: ord-42
+    field_path: shipping.address
+    from_value: "1 Old St"
+    to_value: "42 New Ave"
+    preview_renderer_hint: diff
+    reversible: true
+    compensation_ref:
+      capability: cap-order-revert-shipping
+artifacts: []
+ui_hints:
+  kind: diff
+  priority: 60
+  dismissable: true
+compensation_ref:
+  capability: cap-order-revert-shipping
+expires_at: "2026-04-12T11:00:00Z"
+approval_state: app_review
+created_at: "2026-04-12T10:30:05Z"

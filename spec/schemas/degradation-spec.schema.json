@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/degradation-spec.json",
+  "title": "Degradation Spec",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["level", "description"],
+    "properties": {
+      "level": {
+        "type": "string",
+        "enum": ["full", "partial", "cached", "unavailable"]
+      },
+      "description": { "type": "string" },
+      "trigger":     { "type": "string" },
+      "fallback":    { "type": "string" }
+    }
+  }
+}

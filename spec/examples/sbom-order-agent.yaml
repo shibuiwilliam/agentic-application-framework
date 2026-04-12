@@ -1,0 +1,40 @@
+did: "did:aaf:0c3e6b8e7a1c2d4f5a6b"
+generated_at: "2026-04-12T00:00:01Z"
+
+entries:
+  - kind: model
+    name: anthropic/claude-sonnet-4-20250514
+    version: sonnet-4-20250514
+    content_hash: "0000000000000000000000000000000000000000000000000000000000000000"
+    locator: "https://www.anthropic.com/claude/models"
+
+  - kind: prompt
+    name: system-prompt/order-agent
+    version: "1.0.0"
+    content_hash: "1111111111111111111111111111111111111111111111111111111111111111"
+
+  - kind: prompt
+    name: tool-use-prompt/order-agent
+    version: "1.0.0"
+    content_hash: "2222222222222222222222222222222222222222222222222222222222222222"
+
+  - kind: tool
+    name: cap-order-read
+    version: "1.0.0"
+    content_hash: "3333333333333333333333333333333333333333333333333333333333333333"
+
+  - kind: tool
+    name: cap-order-cancel
+    version: "1.0.0"
+    content_hash: "4444444444444444444444444444444444444444444444444444444444444444"
+
+  - kind: ontology
+    name: commerce.Order
+    version: "0.1.0"
+    content_hash: "5555555555555555555555555555555555555555555555555555555555555555"
+
+  - kind: eval_suite
+    name: order-processing-golden
+    version: "1.0.0"
+    content_hash: "6666666666666666666666666666666666666666666666666666666666666666"
+    locator: "spec/examples/eval-suite-order-processing.yaml"

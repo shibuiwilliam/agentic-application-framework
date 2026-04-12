@@ -1,0 +1,35 @@
+did: "did:aaf:0c3e6b8e7a1c2d4f5a6b"
+display_name: order-agent
+source_hash: "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+
+model_pins:
+  - provider: anthropic
+    model: claude-sonnet-4-20250514
+    system_prompt_hash: "abc123...systemprompthash"
+
+prompt_hashes:
+  - "abc123...systemprompthash"
+  - "def456...toolusepromptgash"
+
+tool_bindings:
+  - tool_id: cap-order-read
+    version: "1.0.0"
+    interface_hash: "iface-hash-001"
+  - tool_id: cap-order-cancel
+    version: "1.0.0"
+    interface_hash: "iface-hash-002"
+
+ontology_slices:
+  - commerce
+  - shipping
+
+capability_allow_list:
+  - cap-order-read
+  - cap-order-cancel
+
+eval_suite_refs:
+  - order-processing-golden
+
+issued_at: "2026-04-12T00:00:00Z"
+expires_at: "2026-10-12T00:00:00Z"
+signature: "aaf-slice-a-hmac-signature-placeholder-0c3e6b8e7a1c2d4f"

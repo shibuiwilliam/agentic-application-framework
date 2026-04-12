@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/sidecar-config.json",
+  "title": "Sidecar Config",
+  "type": "object",
+  "required": ["service_name", "upstream", "capabilities"],
+  "properties": {
+    "service_name": { "type": "string" },
+    "upstream": {
+      "type": "object",
+      "required": ["address", "protocol"],
+      "properties": {
+        "address": { "type": "string" },
+        "protocol": { "type": "string", "enum": ["http", "grpc"] },
+        "timeout_ms": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "description": "In-line capability definitions the sidecar publishes on behalf of the upstream service. Only the fields required to identify and gate the capability are mandatory here; the full CapabilityContract is assembled at load time by the sidecar, which fills in endpoint coordinates and (for writes) verifies that a compensation reference is present (Rule 9).",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "side_effect", "required_scope"],
+        "properties": {
+          "id":              { "type": "string" },
+          "name":            { "type": "string" },
+          "description":    { "type": "string" },
+          "side_effect":    { "type": "string", "enum": ["none", "read", "write", "delete", "send", "payment"] },
+          "required_scope": { "type": "string" },
+          "compensation": {
+            "type": "object",
+            "required": ["endpoint"],
+            "properties": {
+              "endpoint": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "fast_path_rules": {
+      "type": "array",
+      "items": { "$ref": "https://aaf.dev/schemas/fast-path-rules.json" }
+    },
+    "guard": {
+      "type": "object",
+      "properties": {
+        "input_enabled":  { "type": "boolean", "default": true },
+        "output_enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "fallback": {
+      "type": "object",
+      "properties": {
+        "transparent_on_aaf_failure": { "type": "boolean", "default": true }
+      }
+    }
+  }
+}

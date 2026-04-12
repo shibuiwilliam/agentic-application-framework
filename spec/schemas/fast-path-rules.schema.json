@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/fast-path-rules.json",
+  "title": "Fast Path Rules",
+  "type": "object",
+  "required": ["pattern", "target_capability"],
+  "properties": {
+    "pattern": {
+      "type": "object",
+      "required": ["intent_type", "domain"],
+      "properties": {
+        "intent_type": {
+          "type": "string",
+          "enum": [
+            "TransactionalIntent",
+            "AnalyticalIntent",
+            "PlanningIntent",
+            "DelegationIntent",
+            "GovernanceIntent"
+          ]
+        },
+        "domain": { "type": "string" }
+      }
+    },
+    "target_capability": { "type": "string" },
+    "field_mapping": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "properties": {
+          "from": { "type": "string" },
+          "to":   { "type": "string" }
+        }
+      }
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["field", "equals"],
+        "properties": {
+          "field":  { "type": "string" },
+          "equals": {}
+        }
+      }
+    }
+  }
+}

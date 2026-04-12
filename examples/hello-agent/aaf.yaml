@@ -1,0 +1,27 @@
+project:
+  name: hello-agent
+  version: 0.1.0
+
+budget:
+  max_tokens: 4000
+  max_cost_usd: 0.50
+  max_latency_ms: 15000
+
+capabilities:
+  - id: cap-greet
+    name: greet user
+    description: produce a friendly greeting addressed to a named user
+    domains: [greeting]
+    required_scope: greeting:read
+  - id: cap-translate
+    name: translate greeting
+    description: translate a greeting between common languages
+    domains: [greeting]
+    required_scope: greeting:read
+
+demo:
+  goal: show me a greeting analysis
+  domain: greeting
+  role: analyst
+  scopes:
+    - greeting:read

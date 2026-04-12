@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/capability-contract.json",
+  "title": "Capability Contract",
+  "type": "object",
+  "required": [
+    "id", "name", "description", "version", "provider_agent",
+    "endpoint", "input_schema", "output_schema",
+    "side_effect", "idempotent", "reversible", "deterministic",
+    "sla", "cost", "required_scope", "data_classification"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "version": { "type": "string" },
+    "provider_agent": { "type": "string" },
+    "endpoint": {
+      "type": "object",
+      "required": ["type", "address"],
+      "properties": {
+        "type": { "type": "string", "enum": ["grpc", "http", "in_process", "mcp", "a2a"] },
+        "address": { "type": "string" },
+        "method": { "type": "string" }
+      }
+    },
+    "input_schema":  { "type": "object", "additionalProperties": true },
+    "output_schema": { "type": "object", "additionalProperties": true },
+    "side_effect": {
+      "type": "string",
+      "enum": ["none", "read", "write", "delete", "send", "payment"]
+    },
+    "idempotent":    { "type": "boolean" },
+    "reversible":    { "type": "boolean" },
+    "deterministic": { "type": "boolean" },
+    "compensation": {
+      "type": "object",
+      "properties": { "endpoint": { "type": "string" } }
+    },
+    "sla": {
+      "type": "object",
+      "properties": {
+        "latency_p50_ms": { "type": "integer", "minimum": 0 },
+        "latency_p99_ms": { "type": "integer", "minimum": 0 },
+        "availability":   { "type": "number",  "minimum": 0, "maximum": 1 }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "properties": {
+        "per_request": { "type": "number", "minimum": 0 },
+        "currency":    { "type": "string" }
+      }
+    },
+    "required_scope":      { "type": "string" },
+    "data_classification": {
+      "type": "string",
+      "enum": ["public", "internal", "confidential", "restricted"]
+    },
+    "degradation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["level", "description"],
+        "properties": {
+          "level":       { "type": "string", "enum": ["full", "partial", "cached", "unavailable"] },
+          "description": { "type": "string" },
+          "trigger":     { "type": "string" },
+          "fallback":    { "type": "string" }
+        }
+      }
+    },
+    "depends_on":     { "type": "array", "items": { "type": "string" } },
+    "conflicts_with": { "type": "array", "items": { "type": "string" } },
+    "fast_path_rules": { "type": "array", "items": { "type": "object" } }
+  }
+}

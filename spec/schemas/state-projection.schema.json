@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/state-projection.json",
+  "title": "State Projection",
+  "type": "object",
+  "required": ["projection_id", "root_entity", "tenant", "selected_fields", "freshness_ms"],
+  "properties": {
+    "projection_id": { "type": "string" },
+    "root_entity": { "type": "object" },
+    "tenant": { "type": "string" },
+    "selected_fields": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Rule 19: default-deny. Only fields in this list are visible."
+    },
+    "freshness_ms": { "type": "integer", "minimum": 0 }
+  }
+}

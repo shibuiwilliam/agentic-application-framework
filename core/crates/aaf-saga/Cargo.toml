@@ -1,0 +1,19 @@
+[package]
+name = "aaf-saga"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Agentic Saga: definition parser, executor, intelligent recovery, state machine."
+
+[dependencies]
+aaf-contracts = { workspace = true }
+aaf-registry = { workspace = true }
+aaf-runtime = { workspace = true }
+async-trait = { workspace = true }
+parking_lot = { workspace = true }
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }

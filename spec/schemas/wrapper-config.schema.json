@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/wrapper-config.json",
+  "title": "Wrapper Config",
+  "type": "object",
+  "required": ["module_name", "capabilities"],
+  "properties": {
+    "module_name": { "type": "string" },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "function", "side_effect"],
+        "properties": {
+          "name": { "type": "string" },
+          "function": { "type": "string" },
+          "side_effect": {
+            "type": "string",
+            "enum": ["none", "read", "write", "delete", "send", "payment"]
+          },
+          "compensation_function": { "type": "string" }
+        }
+      }
+    }
+  }
+}

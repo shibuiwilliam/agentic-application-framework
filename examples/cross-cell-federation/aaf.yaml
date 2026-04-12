@@ -1,0 +1,36 @@
+project:
+  name: cross-cell-federation-demo
+  version: 0.1.0
+
+budget:
+  max_tokens: 5000
+  max_cost_usd: 1.0
+  max_latency_ms: 30000
+
+# Capabilities from two cells — Japan and US
+capabilities:
+  - id: cap-jp-orders
+    name: Japan orders
+    description: query orders from the Japan cell
+    domains: [orders]
+    required_scope: orders:read
+
+  - id: cap-us-orders
+    name: US orders
+    description: query orders from the US cell
+    domains: [orders]
+    required_scope: orders:read
+
+  - id: cap-jp-inventory
+    name: Japan inventory
+    description: check stock levels in Japan warehouses
+    domains: [inventory]
+    required_scope: inventory:read
+
+demo:
+  goal: compare Japan and US order volumes
+  domain: orders
+  role: analyst
+  scopes:
+    - orders:read
+    - inventory:read

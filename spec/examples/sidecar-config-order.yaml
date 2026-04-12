@@ -1,0 +1,36 @@
+service_name: order-service
+
+upstream:
+  address: order-service:8080
+  protocol: http
+  timeout_ms: 3000
+
+capabilities:
+  - id: cap-order-create
+    name: 注文作成
+    description: 新規注文を作成する
+    side_effect: write
+    required_scope: order:write
+    compensation: { endpoint: cap-order-cancel }
+  - id: cap-order-status
+    name: 注文ステータス
+    description: 既存注文のステータスを照会する
+    side_effect: read
+    required_scope: order:read
+
+fast_path_rules:
+  - pattern:
+      intent_type: AnalyticalIntent
+      domain: orders
+    target_capability: cap-order-status
+    field_mapping:
+      - { from: order_id, to: id }
+    conditions:
+      - { field: query_kind, equals: status }
+
+guard:
+  input_enabled: true
+  output_enabled: true
+
+fallback:
+  transparent_on_aaf_failure: true

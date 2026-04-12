@@ -1,0 +1,24 @@
+[package]
+name = "aaf-runtime"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Graph runtime: DAG model, executor, node types, checkpoint, compensation, budget, scheduler."
+
+[dependencies]
+aaf-contracts = { workspace = true }
+aaf-storage = { workspace = true }
+aaf-trace = { workspace = true }
+aaf-policy = { workspace = true }
+aaf-trust = { workspace = true }
+aaf-memory = { workspace = true }
+aaf-llm = { workspace = true }
+aaf-identity = { workspace = true }
+async-trait = { workspace = true }
+parking_lot = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+chrono = { workspace = true }

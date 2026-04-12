@@ -1,0 +1,18 @@
+display_name: signed-order-agent
+source_hash: 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+seed: signed-order-agent-v1
+
+capability_allow_list:
+  - cap-order-read
+  - cap-order-cancel
+
+ontology_slices:
+  - commerce
+  - shipping
+
+eval_suite_refs:
+  - order-processing-golden
+
+prompt_hashes:
+  - abc123deadbeefsystempromptgash
+  - def456cafefacetooluseprompt

@@ -1,0 +1,8 @@
+id: budget-control
+kind: budget_control
+severity: warning
+description: |
+  Tracks per-intent spend against the budget envelope. Emits a warning
+  at 80% consumption and a hard error when the budget is exhausted.
+params:
+  warn_at_pct: 0.80

@@ -1,0 +1,28 @@
+description: |
+  Fast-path rules for the resilient-query example. When a structured
+  AnalyticalIntent arrives in the "analytics" domain with the right
+  constraints, it skips LLM planning entirely and routes directly to the
+  target capability (<50 ms p99).
+
+rules:
+  - pattern:
+      intent_type: AnalyticalIntent
+      domain: analytics
+    target_capability: cap-sales-monthly
+    field_mapping:
+      - from: period_ref
+        to: period
+    conditions:
+      - field: period_ref
+        equals: last_month
+
+  - pattern:
+      intent_type: AnalyticalIntent
+      domain: analytics
+    target_capability: cap-customer-lookup
+    field_mapping:
+      - from: customer_id
+        to: id
+    conditions:
+      - field: lookup_type
+        equals: customer

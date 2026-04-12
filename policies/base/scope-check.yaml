@@ -1,0 +1,6 @@
+id: scope-check
+kind: scope_check
+severity: error
+description: |
+  Verifies the requester carries the scope declared by the target
+  capability. Denies the call if the scope is missing.

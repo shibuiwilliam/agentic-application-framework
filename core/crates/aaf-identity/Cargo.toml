@@ -1,0 +1,20 @@
+[package]
+name = "aaf-identity"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "AAF agent identity, provenance, and delegation: DID, Keystore, Manifest, SBOM, CapabilityToken, RevocationRegistry (Enhancement X1 Slice A)."
+
+[dependencies]
+aaf-contracts = { workspace = true }
+async-trait = { workspace = true }
+parking_lot = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+tokio = { workspace = true }

@@ -1,0 +1,16 @@
+[package]
+name = "aaf-transport"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Transport abstraction trait. Real protocol drivers (gRPC, HTTP, NATS, WebSocket, CloudEvents) are deferred to a future iteration."
+
+[dependencies]
+aaf-contracts = { workspace = true }
+async-trait = { workspace = true }
+parking_lot = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# AAF pre-commit hook
+#
+# Runs the fast validation gates before every commit.
+# Install with:
+#   git config core.hooksPath .githooks
+#
+# Or use the pre-commit framework instead:
+#   pip install pre-commit && pre-commit install
+
+set -euo pipefail
+
+echo "==> cargo fmt --check"
+cargo fmt --all -- --check
+
+echo "==> make clippy"
+make clippy
+
+# Only run schema validation if spec/ files are staged
+if git diff --cached --name-only | grep -q '^spec/'; then
+    echo "==> schema-validate"
+    make schema-validate
+fi
+
+echo "==> pre-commit checks passed"

@@ -1,0 +1,38 @@
+project:
+  name: resilient-query
+  version: 0.1.0
+
+budget:
+  max_tokens: 3000
+  max_cost_usd: 0.50
+  max_latency_ms: 10000
+
+capabilities:
+  - id: cap-customer-lookup
+    name: customer lookup
+    description: look up a customer profile by ID (returns PII-bearing data)
+    domains: [analytics]
+    required_scope: analytics:read
+    side_effect: read
+    data_classification: confidential
+
+  - id: cap-customer-export
+    name: customer export
+    description: export customer data to a CSV file (write side-effect)
+    domains: [analytics]
+    required_scope: analytics:write
+    side_effect: write
+
+  - id: cap-sales-monthly
+    name: monthly sales report
+    description: retrieve aggregated sales figures for a given month
+    domains: [analytics]
+    required_scope: analytics:read
+    side_effect: read
+
+demo:
+  goal: show me last month's sales summary
+  domain: analytics
+  role: analyst
+  scopes:
+    - analytics:read

@@ -1,0 +1,19 @@
+[package]
+name = "aaf-wrapper"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "In-process wrapper for modular monoliths."
+
+[dependencies]
+aaf-contracts = { workspace = true }
+aaf-policy = { workspace = true }
+aaf-registry = { workspace = true }
+chrono = { workspace = true }
+parking_lot = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+async-trait = { workspace = true }

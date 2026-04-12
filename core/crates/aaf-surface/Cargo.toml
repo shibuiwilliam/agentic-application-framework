@@ -1,0 +1,17 @@
+[package]
+name = "aaf-surface"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "AAF Application-Native Surface: events, situations, proposals, projections (Enhancement E3 Slice A)."
+
+[dependencies]
+aaf-contracts = { workspace = true }
+async-trait = { workspace = true }
+parking_lot = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+tokio = { workspace = true }

@@ -1,0 +1,82 @@
+[workspace]
+resolver = "2"
+members = [
+    "core/crates/aaf-contracts",
+    "core/crates/aaf-identity",
+    "core/crates/aaf-ontology",
+    "core/crates/aaf-storage",
+    "core/crates/aaf-trace",
+    "core/crates/aaf-trust",
+    "core/crates/aaf-memory",
+    "core/crates/aaf-policy",
+    "core/crates/aaf-registry",
+    "core/crates/aaf-intent",
+    "core/crates/aaf-llm",
+    "core/crates/aaf-runtime",
+    "core/crates/aaf-saga",
+    "core/crates/aaf-planner",
+    "core/crates/aaf-sidecar",
+    "core/crates/aaf-wrapper",
+    "core/crates/aaf-federation",
+    "core/crates/aaf-transport",
+    "core/crates/aaf-eval",
+    "core/crates/aaf-surface",
+    "core/crates/aaf-learn",
+    "core/crates/aaf-server",
+    "core/tests/integration",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+license = "Apache-2.0"
+authors = ["AAF Contributors"]
+repository = "https://github.com/aaf/aaf"
+
+[workspace.dependencies]
+# Versions pinned to releases compatible with Rust 1.70 (May 2023).
+serde = { version = "=1.0.164", features = ["derive"] }
+serde_derive = "=1.0.164"
+serde_json = "=1.0.96"
+serde_yaml = "=0.9.21"
+thiserror = "=1.0.40"
+async-trait = "=0.1.74"
+tokio = { version = "=1.28.2", features = ["macros", "rt-multi-thread", "sync", "time"] }
+uuid = { version = "=1.3.4", features = ["v4", "serde"] }
+chrono = { version = "=0.4.26", default-features = false, features = ["serde", "clock", "std"] }
+tracing = "=0.1.37"
+parking_lot = "=0.12.1"
+once_cell = "=1.17.1"
+regex = "=1.8.4"
+sha2 = "=0.10.6"
+hex = "=0.4.3"
+rand = "=0.8.5"
+
+# Internal crates (path deps)
+aaf-contracts = { path = "core/crates/aaf-contracts", version = "0.1.0" }
+aaf-ontology  = { path = "core/crates/aaf-ontology",  version = "0.1.0" }
+aaf-identity  = { path = "core/crates/aaf-identity",  version = "0.1.0" }
+aaf-storage   = { path = "core/crates/aaf-storage",   version = "0.1.0" }
+aaf-trace     = { path = "core/crates/aaf-trace",     version = "0.1.0" }
+aaf-trust     = { path = "core/crates/aaf-trust",     version = "0.1.0" }
+aaf-memory    = { path = "core/crates/aaf-memory",    version = "0.1.0" }
+aaf-policy    = { path = "core/crates/aaf-policy",    version = "0.1.0" }
+aaf-registry  = { path = "core/crates/aaf-registry",  version = "0.1.0" }
+aaf-intent    = { path = "core/crates/aaf-intent",    version = "0.1.0" }
+aaf-llm       = { path = "core/crates/aaf-llm",       version = "0.1.0" }
+aaf-runtime   = { path = "core/crates/aaf-runtime",   version = "0.1.0" }
+aaf-saga      = { path = "core/crates/aaf-saga",      version = "0.1.0" }
+aaf-planner   = { path = "core/crates/aaf-planner",   version = "0.1.0" }
+aaf-sidecar   = { path = "core/crates/aaf-sidecar",   version = "0.1.0" }
+aaf-wrapper   = { path = "core/crates/aaf-wrapper",   version = "0.1.0" }
+aaf-federation= { path = "core/crates/aaf-federation",version = "0.1.0" }
+aaf-transport = { path = "core/crates/aaf-transport", version = "0.1.0" }
+aaf-eval      = { path = "core/crates/aaf-eval",      version = "0.1.0" }
+aaf-surface   = { path = "core/crates/aaf-surface",   version = "0.1.0" }
+aaf-learn     = { path = "core/crates/aaf-learn",     version = "0.1.0" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+opt-level = 3

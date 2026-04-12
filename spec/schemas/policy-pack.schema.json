@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/policy-pack.json",
+  "title": "Policy Pack",
+  "type": "object",
+  "required": ["name", "version", "rules"],
+  "properties": {
+    "name":    { "type": "string" },
+    "version": { "type": "string" },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "severity"],
+        "properties": {
+          "id":   { "type": "string" },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "scope_check",
+              "side_effect_gate",
+              "budget_control",
+              "pii_guard",
+              "injection_guard",
+              "composition_safety",
+              "boundary_enforcement"
+            ]
+          },
+          "severity": { "type": "string", "enum": ["info", "warning", "error", "fatal"] },
+          "params":   { "type": "object", "additionalProperties": true }
+        }
+      }
+    }
+  }
+}

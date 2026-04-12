@@ -1,0 +1,12 @@
+id: pii-output
+kind: pii_guard
+severity: error
+description: |
+  Inspects every node output (PostStep hook) for personally
+  identifiable information. Denies emission of PII so the runtime never
+  surfaces it to downstream consumers.
+params:
+  patterns:
+    - email
+    - jp_phone
+    - credit_card

@@ -1,0 +1,38 @@
+name: order-processing
+description: |
+  Three-step order flow: stock check (read) → payment (write w/ compensation)
+  → shipping (write w/ intelligent recovery). Demonstrates AAF's Agentic Saga
+  where shipping failure triggers partial compensation (refund the payment)
+  while preserving the stock reservation.
+
+steps:
+  - step: 1
+    name: Stock Check
+    type: deterministic
+    capability: cap-stock-check
+    compensation_type: none
+
+  - step: 2
+    name: Payment Execute
+    type: deterministic
+    capability: cap-payment-execute
+    compensation: cap-payment-refund
+    compensation_type: mandatory
+
+  - step: 3
+    name: Shipping Arrange
+    type: agent
+    capability: cap-shipping-arrange
+    compensation: cap-shipping-cancel
+    compensation_type: mandatory
+    on_failure:
+      strategy: intelligent_recovery
+      rules:
+        - condition: address_invalid
+          action: pause_and_ask_user
+          preserve: ["1", "2"]
+        - condition: carrier_temporary_outage
+          action: retry_with_alternative
+          preserve: ["1", "2"]
+        - condition: oversize_package
+          action: full_compensation

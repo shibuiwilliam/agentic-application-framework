@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/saga-definition.json",
+  "title": "Saga Definition",
+  "type": "object",
+  "required": ["name", "steps"],
+  "properties": {
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["step", "name", "type", "capability"],
+        "properties": {
+          "step":        { "type": "integer", "minimum": 1 },
+          "name":        { "type": "string" },
+          "type":        { "type": "string", "enum": ["deterministic", "agent", "approval"] },
+          "capability":  { "type": "string" },
+          "compensation":      { "type": "string" },
+          "compensation_type": { "type": "string", "enum": ["mandatory", "best_effort", "none"] },
+          "on_failure": {
+            "type": "object",
+            "properties": {
+              "strategy": { "type": "string", "enum": ["intelligent_recovery", "full_compensation", "retry"] },
+              "rules": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["condition", "action"],
+                  "properties": {
+                    "condition": { "type": "string" },
+                    "action": {
+                      "type": "string",
+                      "enum": [
+                        "pause_and_ask_user",
+                        "retry_with_alternative",
+                        "full_compensation",
+                        "partial_compensation",
+                        "skip"
+                      ]
+                    },
+                    "preserve": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

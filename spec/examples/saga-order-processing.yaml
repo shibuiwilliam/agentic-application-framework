@@ -1,0 +1,32 @@
+name: order-processing
+description: 在庫予約 → 決済 → 配送手配の順で実行する注文処理サガ
+steps:
+  - step: 1
+    name: 在庫予約
+    type: deterministic
+    capability: cap-stock-reserve
+    compensation: cap-stock-release
+    compensation_type: mandatory
+
+  - step: 2
+    name: 決済実行
+    type: deterministic
+    capability: cap-payment-execute
+    compensation: cap-payment-refund
+    compensation_type: mandatory
+
+  - step: 3
+    name: 配送手配
+    type: agent
+    capability: cap-shipping-arrange
+    on_failure:
+      strategy: intelligent_recovery
+      rules:
+        - condition: address_invalid
+          action: pause_and_ask_user
+          preserve: ["1", "2"]
+        - condition: carrier_temporary_outage
+          action: retry_with_alternative
+          preserve: ["1", "2"]
+        - condition: oversize_package
+          action: full_compensation

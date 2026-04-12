@@ -1,0 +1,15 @@
+[package]
+name = "aaf-learn"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "AAF online learning: fast-path miner, capability scorer, router tuner, escalation tuner (E1 Slice B)."
+
+[dependencies]
+aaf-contracts = { workspace = true }
+aaf-trace = { workspace = true }
+parking_lot = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

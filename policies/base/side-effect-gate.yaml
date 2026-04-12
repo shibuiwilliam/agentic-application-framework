@@ -1,0 +1,10 @@
+id: write-needs-approval
+kind: side_effect_gate
+severity: warning
+description: |
+  Forces human approval on capabilities whose side effect is one of
+  write / delete / send / payment, unless the requester explicitly
+  carries the `auto-approve` scope.
+params:
+  gated_side_effects: [write, delete, send, payment]
+  auto_approve_scope: auto-approve

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/capability-token.json",
+  "title": "Capability Token",
+  "description": "Signed bearer capability-delegation token (Wave 2 X1).",
+  "type": "object",
+  "required": ["claims", "signature"],
+  "properties": {
+    "claims": {
+      "type": "object",
+      "required": [
+        "issuer", "subject", "scope", "depth_remaining",
+        "not_before", "expires_at", "jti"
+      ],
+      "properties": {
+        "issuer":  { "type": "string", "pattern": "^did:aaf:" },
+        "subject": { "type": "string", "pattern": "^did:aaf:" },
+        "scope": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "depth_remaining": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "not_before": { "type": "string", "format": "date-time" },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "jti": { "type": "string" }
+      }
+    },
+    "signature": { "type": "string", "pattern": "^[0-9a-f]+$" }
+  }
+}

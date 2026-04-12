@@ -1,0 +1,78 @@
+id: cap-payment-execute
+name: 決済実行
+description: 指定された注文IDに対して決済を実行する。冪等キーで二重実行を防止。
+version: 1.4.0
+provider_agent: payment-agent
+
+endpoint:
+  type: grpc
+  address: payment-service:50052
+  method: ExecutePayment
+
+input_schema:
+  type: object
+  required: [order_id, amount, currency, idempotency_key]
+  properties:
+    order_id: { type: string }
+    amount: { type: number, minimum: 0 }
+    currency: { type: string, enum: [JPY, USD, EUR] }
+    idempotency_key: { type: string }
+
+output_schema:
+  type: object
+  required: [payment_id, status]
+  properties:
+    payment_id: { type: string }
+    status: { type: string, enum: [authorized, captured, failed] }
+
+side_effect: payment
+idempotent: true
+reversible: true
+deterministic: true
+
+# Rule 9: write/delete/send/payment MUST declare a compensation handler.
+compensation:
+  endpoint: cap-payment-refund
+
+sla:
+  latency_p50_ms: 200
+  latency_p99_ms: 1500
+  availability: 0.9995
+
+cost:
+  per_request: 0.005
+  currency: USD
+
+required_scope: payment:execute
+data_classification: confidential
+
+degradation:
+  - level: full
+    description: 全決済プロバイダ稼働
+  - level: partial
+    trigger: secondary_provider_down
+    description: プライマリプロバイダのみ
+  - level: cached
+    trigger: all_providers_down
+    description: 認証のみ受付、後で確定
+  - level: unavailable
+    description: 全決済プロバイダが到達不能、オンライン処理は一時停止
+    fallback: 手動決済キューに追加
+
+depends_on:
+  - cap-fraud-check
+conflicts_with: []
+
+domains: [payments, finance]
+tags: [payment, transaction, confidential]
+
+# E2 Slice B/C — entity-space declarations. The boundary rule uses
+# these to detect cross-classification flow and the composition
+# checker refuses two capabilities writing `commerce.Payment` in the
+# same plan without a reconciliation step.
+reads:
+  - entity_id: commerce.Order
+writes:
+  - entity_id: commerce.Payment
+emits:
+  - id: commerce.PaymentExecuted

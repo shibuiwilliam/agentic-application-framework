@@ -1,0 +1,27 @@
+project:
+  name: aaf-demo
+  version: 0.1.0
+
+budget:
+  max_tokens: 8000
+  max_cost_usd: 2.0
+  max_latency_ms: 60000
+
+capabilities:
+  - id: cap-sales-monthly
+    name: monthly sales report
+    description: monthly sales report grouped by region
+    domains: [sales]
+    required_scope: sales:read
+  - id: cap-sales-forecast
+    name: sales forecast
+    description: forecast next quarter sales by region
+    domains: [sales]
+    required_scope: sales:read
+
+demo:
+  goal: show last month sales by region
+  domain: sales
+  role: analyst
+  scopes:
+    - sales:read

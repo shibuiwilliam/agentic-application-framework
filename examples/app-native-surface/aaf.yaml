@@ -1,0 +1,51 @@
+project:
+  name: app-native-surface
+  version: 0.1.0
+
+budget:
+  max_tokens: 3000
+  max_cost_usd: 0.50
+  max_latency_ms: 15000
+
+# Capabilities backing the order-management surface.
+capabilities:
+  - id: cap-order-read
+    name: order lookup
+    description: look up an order by ID and return its current state
+    domains: [commerce]
+    required_scope: orders:read
+    side_effect: read
+
+  - id: cap-order-cancel
+    name: order cancel
+    description: cancel an existing order (write side-effect)
+    domains: [commerce]
+    required_scope: orders:write
+    side_effect: write
+
+  - id: cap-order-reopen
+    name: order reopen
+    description: reopen a previously cancelled order (compensator for cancel)
+    domains: [commerce]
+    required_scope: orders:write
+    side_effect: write
+
+# Event-to-intent mapping rules for the RuleBasedAdapter.
+event_rules:
+  order.page.opened: AnalyticalIntent
+  order.cancel.requested: TransactionalIntent
+  order.review.requested: DelegationIntent
+
+# Entity projections (Rule 19 default-deny).
+projections:
+  - entity: commerce.Order
+    selected_fields: [id, status, created_at]
+    freshness_ms: 60000
+
+demo:
+  goal: handle order cancellation from ops dashboard
+  domain: commerce
+  role: operator
+  scopes:
+    - orders:read
+    - orders:write

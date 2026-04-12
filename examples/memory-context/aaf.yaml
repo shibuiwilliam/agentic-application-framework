@@ -1,0 +1,57 @@
+project:
+  name: memory-context
+  version: 0.1.0
+
+budget:
+  max_tokens: 5000
+  max_cost_usd: 1.0
+  max_latency_ms: 30000
+
+# Rule 10 — Context minimization: ~7,500 tokens per LLM call.
+# Five sections: System (2,000), Intent (500), Memory (2,000),
+# Step (1,000), Tools (2,000).
+context_budget:
+  total: 7500
+  system: 2000
+  intent: 500
+  memory: 2000
+  step: 1000
+  tools: 2000
+
+# Four-layer memory model (PROJECT.md §3.6):
+#
+# 1. Working  — per-task transient state (e.g. intermediate results)
+# 2. Thread   — per-conversation continuation (append-only log)
+# 3. Long-term — semantic/episodic/procedural knowledge, entity-indexed
+# 4. Artifact  — produced outputs with full provenance
+memory:
+  working:
+    backend: in-memory
+  thread:
+    backend: in-memory
+  longterm:
+    backend: in-memory
+    entity_index: true
+  artifacts:
+    backend: in-memory
+
+capabilities:
+  - id: cap-order-lookup
+    name: order lookup
+    description: retrieve order details by ID
+    domains: [commerce]
+    required_scope: orders:read
+
+  - id: cap-report-generate
+    name: report generator
+    description: generate a sales summary report as an artifact
+    domains: [commerce]
+    required_scope: reports:read
+
+demo:
+  goal: look up an order and produce a report
+  domain: commerce
+  role: analyst
+  scopes:
+    - orders:read
+    - reports:read

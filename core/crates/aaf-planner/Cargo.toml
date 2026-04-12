@@ -1,0 +1,22 @@
+[package]
+name = "aaf-planner"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Planner / Router: pattern classification, fast path, bounded autonomy, composition safety, plan cache."
+
+[dependencies]
+aaf-contracts = { workspace = true }
+aaf-registry = { workspace = true }
+aaf-policy = { workspace = true }
+aaf-trust = { workspace = true }
+aaf-intent = { workspace = true }
+parking_lot = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+chrono = { workspace = true }
+tokio = { workspace = true }

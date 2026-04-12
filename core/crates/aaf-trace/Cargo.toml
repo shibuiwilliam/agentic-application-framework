@@ -1,0 +1,20 @@
+[package]
+name = "aaf-trace"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Observation/trace recording for AAF (Rule 12: Trace Everything)."
+
+[dependencies]
+aaf-contracts = { workspace = true }
+aaf-storage = { workspace = true }
+async-trait = { workspace = true }
+parking_lot = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+chrono = { workspace = true }
+
+[dev-dependencies]

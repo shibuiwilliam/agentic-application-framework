@@ -1,0 +1,42 @@
+name: aaf-base
+version: 0.1.0
+rules:
+  - id: scope-check
+    kind: scope_check
+    severity: error
+
+  - id: write-needs-approval
+    kind: side_effect_gate
+    severity: error
+    params:
+      gated_side_effects: [write, delete, send, payment]
+
+  - id: budget-control
+    kind: budget_control
+    severity: warning
+    params:
+      warn_at_pct: 80
+
+  - id: pii-output
+    kind: pii_guard
+    severity: error
+    params:
+      patterns: [email, jp_phone, credit_card]
+
+  - id: prompt-injection
+    kind: injection_guard
+    severity: error
+    params:
+      patterns:
+        - "ignore (all|previous) (instructions|rules)"
+        - "system prompt"
+
+  - id: composition-safety
+    kind: composition_safety
+    severity: warning
+    params:
+      max_combined_writes: 3
+
+  - id: tenant-boundary
+    kind: boundary_enforcement
+    severity: fatal

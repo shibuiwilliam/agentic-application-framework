@@ -1,0 +1,28 @@
+event_id: evt-abc123
+event_type: order.page.opened
+source:
+  app_id: ops-web
+  surface: order-detail
+situation:
+  current_entities:
+    - entity_id: commerce.Order
+      version: { major: 0, minor: 1, patch: 0 }
+      tenant: tenant-a
+      local_id: ord-42
+  current_screen:
+    route: /orders/42
+    component: OrderDetail
+    visible_fields: [id, status, total]
+  session:
+    user_id: usr-tanaka
+    role: analyst
+    scopes: [sales:read]
+    locale: en-US
+    tenant_id: tenant-a
+  constraints:
+    time_budget_ms: 8000
+    cost_budget_usd: 0.25
+payload:
+  route: /orders/42
+session_id: sess-42
+timestamp: "2026-04-12T10:30:00Z"

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/revocation-list.json",
+  "title": "Revocation List",
+  "description": "Signed revocation entries for agents, prompts, tool versions, manifest hashes, or token ids.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["kind", "target", "reason", "revoked_at", "signer", "signature"],
+    "properties": {
+      "kind": {
+        "type": "string",
+        "enum": ["did", "prompt_hash", "tool_version", "manifest_hash", "token_jti"]
+      },
+      "target": { "type": "string" },
+      "reason": { "type": "string" },
+      "revoked_at": { "type": "string", "format": "date-time" },
+      "signer": { "type": "string", "pattern": "^did:aaf:" },
+      "signature": { "type": "string", "pattern": "^[0-9a-f]+$" }
+    }
+  }
+}

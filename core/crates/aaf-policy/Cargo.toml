@@ -1,0 +1,17 @@
+[package]
+name = "aaf-policy"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Policy engine, three guards (input/output/action), seven rule families, approval workflow."
+
+[dependencies]
+aaf-contracts = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+regex = { workspace = true }
+once_cell = { workspace = true }
+chrono = { workspace = true }
+parking_lot = { workspace = true }

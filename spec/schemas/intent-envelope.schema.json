@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/intent-envelope.json",
+  "title": "Intent Envelope",
+  "type": "object",
+  "required": ["intent_id", "type", "requester", "goal", "domain", "budget", "trace_id", "depth"],
+  "properties": {
+    "intent_id": { "type": "string", "pattern": "^int-[A-Za-z0-9]+$" },
+    "type": {
+      "type": "string",
+      "enum": [
+        "TransactionalIntent",
+        "AnalyticalIntent",
+        "PlanningIntent",
+        "DelegationIntent",
+        "GovernanceIntent"
+      ]
+    },
+    "requester": {
+      "type": "object",
+      "required": ["user_id", "role", "scopes"],
+      "properties": {
+        "user_id": { "type": "string" },
+        "role": { "type": "string" },
+        "scopes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "goal": { "type": "string", "minLength": 1 },
+    "domain": { "type": "string" },
+    "constraints": { "type": "object", "additionalProperties": true },
+    "budget": {
+      "type": "object",
+      "required": ["max_tokens", "max_cost_usd", "max_latency_ms"],
+      "properties": {
+        "max_tokens": { "type": "integer", "minimum": 0 },
+        "max_cost_usd": { "type": "number", "minimum": 0 },
+        "max_latency_ms": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "deadline": { "type": "string", "format": "date-time" },
+    "risk_tier": {
+      "type": "string",
+      "enum": ["read", "write", "advisory", "delegation", "governance"]
+    },
+    "approval_policy": { "type": "string" },
+    "output_contract": { "type": "object", "additionalProperties": true },
+    "trace_id": { "type": "string" },
+    "depth": { "type": "integer", "minimum": 0, "maximum": 5 }
+  },
+  "additionalProperties": false
+}

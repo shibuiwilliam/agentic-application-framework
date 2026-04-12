@@ -1,0 +1,18 @@
+[package]
+name = "aaf-trust"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Trust scores, autonomy levels, delegation chain, and artifact signing for AAF."
+
+[dependencies]
+aaf-contracts = { workspace = true }
+aaf-identity = { workspace = true }
+parking_lot = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+chrono = { workspace = true }

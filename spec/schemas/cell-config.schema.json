@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/cell-config.json",
+  "title": "Cell Config",
+  "type": "object",
+  "required": ["id", "region"],
+  "properties": {
+    "id":     { "type": "string" },
+    "region": { "type": "string" },
+    "local_capabilities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "federation": {
+      "type": "object",
+      "properties": {
+        "agreements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["parties", "shared_capabilities"],
+            "properties": {
+              "parties": { "type": "array", "items": { "type": "string" } },
+              "shared_capabilities": { "type": "array", "items": { "type": "string" } },
+              "prohibited_fields":   { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

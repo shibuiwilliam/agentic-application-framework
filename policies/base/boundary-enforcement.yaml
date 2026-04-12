@@ -1,0 +1,8 @@
+id: tenant-boundary
+kind: boundary_enforcement
+severity: fatal
+description: |
+  Enforces tenant isolation and data classification gates. Denies any
+  call where the active tenant differs from the requester's tenant, or
+  where a confidential / restricted capability is invoked without the
+  matching scope.

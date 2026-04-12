@@ -1,0 +1,37 @@
+id: commerce.Order
+version: { major: 0, minor: 1, patch: 0 }
+description: A customer order containing line items and totals.
+classification: internal
+owner_service: order-service
+
+fields:
+  - name: id
+    field_type: string
+    required: true
+    description: Order id (server-assigned)
+  - name: customer_id
+    field_type: string
+    required: true
+  - name: total
+    field_type: float
+    required: true
+  - name: currency
+    field_type: string
+    required: true
+  - name: status
+    field_type: string
+    required: true
+  - name: placed_at
+    field_type: timestamp
+    required: true
+
+relations:
+  - kind: has_many
+    from: commerce.Order
+    to: commerce.LineItem
+    cardinality: one_or_many
+    description: Each order has one or more line items
+  - kind: references
+    from: commerce.Order
+    to: commerce.Customer
+    cardinality: exactly_one

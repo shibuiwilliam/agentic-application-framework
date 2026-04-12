@@ -1,0 +1,33 @@
+[package]
+name = "aaf-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "AAF server binary: wires every core component together. Network drivers (gRPC/REST/WS) deferred."
+
+[dependencies]
+aaf-contracts = { workspace = true }
+aaf-storage = { workspace = true }
+aaf-trace = { workspace = true }
+aaf-trust = { workspace = true }
+aaf-memory = { workspace = true }
+aaf-policy = { workspace = true }
+aaf-registry = { workspace = true }
+aaf-intent = { workspace = true }
+aaf-llm = { workspace = true }
+aaf-runtime = { workspace = true }
+aaf-saga = { workspace = true }
+aaf-planner = { workspace = true }
+aaf-sidecar = { workspace = true }
+aaf-wrapper = { workspace = true }
+aaf-federation = { workspace = true }
+aaf-identity = { workspace = true }
+aaf-ontology = { workspace = true }
+aaf-transport = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+chrono = { workspace = true }

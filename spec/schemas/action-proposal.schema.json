@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/action-proposal.json",
+  "title": "Action Proposal",
+  "type": "object",
+  "required": [
+    "proposal_id",
+    "intent_id",
+    "trace_id",
+    "tenant_id",
+    "summary",
+    "rationale",
+    "ui_hints",
+    "expires_at",
+    "approval_state"
+  ],
+  "properties": {
+    "proposal_id": { "type": "string" },
+    "intent_id": { "type": "string" },
+    "trace_id": { "type": "string" },
+    "tenant_id": { "type": "string" },
+    "summary": { "type": "string" },
+    "rationale": { "type": "string" },
+    "mutations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "entity_ref",
+          "field_path",
+          "from_value",
+          "to_value",
+          "reversible",
+          "compensation_ref"
+        ],
+        "properties": {
+          "entity_ref": { "type": "object" },
+          "field_path": { "type": "string" },
+          "from_value": {},
+          "to_value": {},
+          "preview_renderer_hint": { "type": "string" },
+          "reversible": { "type": "boolean" },
+          "compensation_ref": {
+            "type": "object",
+            "required": ["capability"],
+            "properties": {
+              "capability": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "artifacts": { "type": "array", "items": { "type": "string" } },
+    "ui_hints": {
+      "type": "object",
+      "required": ["kind", "priority", "dismissable"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["diff", "form", "card", "banner"]
+        },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "dismissable": { "type": "boolean" }
+      }
+    },
+    "compensation_ref": {
+      "type": "object",
+      "required": ["capability"],
+      "properties": {
+        "capability": { "type": "string" }
+      }
+    },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "approval_state": {
+      "type": "string",
+      "enum": ["draft", "proposed", "app_review", "accepted", "rejected", "transformed", "expired"]
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "description": "Rule 20: if mutations is non-empty, compensation_ref must be present.",
+      "if": {
+        "properties": {
+          "mutations": { "type": "array", "minItems": 1 }
+        },
+        "required": ["mutations"]
+      },
+      "then": {
+        "required": ["compensation_ref"]
+      }
+    }
+  ]
+}

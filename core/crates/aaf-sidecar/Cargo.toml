@@ -1,0 +1,21 @@
+[package]
+name = "aaf-sidecar"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Agent Sidecar: proxy, capability publishing, fast-path, guards, transparent fallback (Rule 13)."
+
+[dependencies]
+aaf-contracts = { workspace = true }
+aaf-policy = { workspace = true }
+aaf-planner = { workspace = true }
+aaf-registry = { workspace = true }
+aaf-transport = { workspace = true }
+async-trait = { workspace = true }
+chrono = { workspace = true }
+parking_lot = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }

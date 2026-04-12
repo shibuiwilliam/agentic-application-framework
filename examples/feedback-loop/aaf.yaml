@@ -1,0 +1,54 @@
+project:
+  name: feedback-loop
+  version: 0.1.0
+
+budget:
+  max_tokens: 5000
+  max_cost_usd: 1.0
+  max_latency_ms: 30000
+
+# Two agents at different starting trust levels demonstrate the
+# promotion / demotion lifecycle and delegation chain propagation.
+agents:
+  - id: agent-senior
+    description: Experienced agent that starts at L3 autonomy
+    initial_score: 0.75
+    # L3 threshold is 0.70, so 0.75 qualifies
+
+  - id: agent-junior
+    description: New agent that starts at L2 autonomy
+    initial_score: 0.60
+    # L2 threshold is 0.55, so 0.60 qualifies
+
+# Capabilities exercised by the learning subscribers.
+capabilities:
+  - id: cap-sales-report
+    name: sales report
+    description: generate a monthly sales report
+    domains: [sales]
+    required_scope: sales:read
+    side_effect: read
+
+  - id: cap-order-process
+    name: order process
+    description: process a customer order
+    domains: [orders]
+    required_scope: orders:write
+    side_effect: write
+
+# Learning subscriber configuration for the feedback loop.
+learning:
+  fast_path_miner:
+    threshold: 3
+    min_distinct_sessions: 2
+  capability_scorer:
+    success_delta: 0.05
+    failure_delta: -0.10
+
+demo:
+  goal: run feedback loop scenario
+  domain: sales
+  role: analyst
+  scopes:
+    - sales:read
+    - orders:write

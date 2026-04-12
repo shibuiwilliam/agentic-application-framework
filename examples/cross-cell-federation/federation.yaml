@@ -1,0 +1,25 @@
+# Federation configuration for the cross-cell example.
+#
+# Two cells (Japan, US) share order-related capabilities but enforce
+# a data boundary: PII fields (email, phone) must never cross cells.
+
+cells:
+  - id: cell-japan
+    region: ap-northeast-1
+    local_capabilities:
+      - cap-jp-orders
+      - cap-jp-inventory
+
+  - id: cell-us
+    region: us-east-1
+    local_capabilities:
+      - cap-us-orders
+
+agreements:
+  - parties: [cell-japan, cell-us]
+    shared_capabilities:
+      - cap-jp-orders
+      - cap-us-orders
+    prohibited_fields:
+      - pii_email
+      - pii_phone

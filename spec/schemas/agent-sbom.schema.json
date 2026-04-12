@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aaf.dev/schemas/agent-sbom.json",
+  "title": "Agent SBOM",
+  "description": "Bill of materials for an AAF agent (Rule 24).",
+  "type": "object",
+  "required": ["did", "generated_at", "entries"],
+  "properties": {
+    "did": { "type": "string", "pattern": "^did:aaf:" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "name", "version", "content_hash"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["model", "prompt", "tool", "ontology", "eval_suite", "training_data", "other"]
+          },
+          "name":    { "type": "string" },
+          "version": { "type": "string" },
+          "content_hash": { "type": "string", "pattern": "^[0-9a-f]+$" },
+          "locator": { "type": "string" }
+        }
+      }
+    }
+  }
+}

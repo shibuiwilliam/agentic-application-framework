@@ -1,0 +1,13 @@
+id: prompt-injection
+kind: injection_guard
+severity: error
+description: |
+  Detects classic prompt-injection patterns in inbound payloads
+  (PreStep hook).
+params:
+  patterns:
+    - "ignore (all|previous) (instructions|rules)"
+    - "disregard (the )?system prompt"
+    - "you are now"
+    - "pretend to be"
+    - "reveal (the )?system"
