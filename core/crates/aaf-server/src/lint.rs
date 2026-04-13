@@ -26,7 +26,7 @@
 //!
 //! > "Add a `make ontology-lint` target that warns on capabilities
 //! > missing entity declarations; advance to error once adoption is
-//! > >90%."
+//! > \>90%."
 //!
 //! The tool computes an adoption ratio (how many scanned capabilities
 //! already carry declarations) and uses it to choose the reporting

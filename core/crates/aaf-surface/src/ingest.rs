@@ -8,9 +8,7 @@
 
 use crate::event::AppEvent;
 use crate::situation_packager::SituationPackager;
-use aaf_contracts::{
-    BudgetContract, IntentEnvelope, IntentId, IntentType, Requester, RiskTier, TraceId,
-};
+use aaf_contracts::{BudgetContract, IntentEnvelope, IntentId, IntentType, Requester, RiskTier};
 use async_trait::async_trait;
 use chrono::Utc;
 use std::collections::HashMap;
@@ -109,7 +107,7 @@ impl EventToIntentAdapter for RuleBasedAdapter {
             risk_tier,
             approval_policy: "human".into(),
             output_contract: None,
-            trace_id: event.trace_id.clone().unwrap_or_else(TraceId::new),
+            trace_id: event.trace_id.clone().unwrap_or_default(),
             depth: 0,
             created_at: Utc::now(),
             entities_in_context: entities,

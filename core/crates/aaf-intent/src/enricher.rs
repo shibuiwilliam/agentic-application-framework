@@ -80,7 +80,7 @@ impl Enricher {
         let tenant: Option<TenantId> = envelope.requester.tenant.clone();
         for mut ent in discovered {
             if ent.tenant.is_none() {
-                ent.tenant = tenant.clone();
+                ent.tenant.clone_from(&tenant);
             }
             if !envelope.entities_in_context.iter().any(|existing| {
                 existing.entity_id == ent.entity_id && existing.tenant == ent.tenant
