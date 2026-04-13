@@ -45,6 +45,7 @@ impl Default for ProjectConfig {
 
 /// Budget block consumed by the demo runner.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[allow(unknown_lints, clippy::struct_field_names)]
 pub struct BudgetSection {
     /// Token cap.
     pub max_tokens: u64,

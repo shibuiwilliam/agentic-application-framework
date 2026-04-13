@@ -1,8 +1,12 @@
 # AAF pre-commit configuration
 #
+# Mirrors the CI jobs in .github/workflows/ci.yml so that issues are
+# caught locally before they reach GitHub Actions.
+#
 # Install:
 #   pip install pre-commit
 #   pre-commit install
+#   pre-commit install --hook-type pre-push
 #
 # Run manually against all files:
 #   pre-commit run --all-files
@@ -31,45 +35,54 @@ repos:
       - id: no-commit-to-branch
         args: [--branch, main, --branch, master]
 
-  # ── Rust formatting ────────────────────────────────────────────────
+  # ── CI-mirrored checks (same order as .github/workflows/ci.yml) ──
   - repo: local
     hooks:
+      # CI job: fmt
       - id: cargo-fmt
-        name: cargo fmt
+        name: "ci: cargo fmt"
         entry: cargo fmt --all -- --check
         language: system
         types: [rust]
         pass_filenames: false
 
-  # ── Rust linting ───────────────────────────────────────────────────
+      # CI job: clippy
       - id: cargo-clippy
-        name: cargo clippy
+        name: "ci: cargo clippy"
         entry: make clippy
         language: system
         types: [rust]
         pass_filenames: false
 
-  # ── Rust tests ─────────────────────────────────────────────────────
+      # CI job: test (pre-push only — too slow for every commit)
       - id: cargo-test
-        name: cargo test
+        name: "ci: cargo test"
         entry: cargo test --workspace
         language: system
         types: [rust]
         pass_filenames: false
         stages: [pre-push]
 
-  # ── Schema validation ──────────────────────────────────────────────
+      # CI job: schema-validate
       - id: schema-validate
-        name: schema validate
+        name: "ci: schema validate"
         entry: python3 scripts/schema_validate.py --schema-dir spec/schemas --examples-dir spec/examples
         language: system
         files: ^spec/
         pass_filenames: false
 
-  # ── Ontology lint ──────────────────────────────────────────────────
-      - id: ontology-lint
-        name: ontology lint
-        entry: bash -c 'cargo build --workspace -q && target/debug/aaf-server ontology lint spec/examples'
+      # CI job: build
+      - id: cargo-build
+        name: "ci: cargo build"
+        entry: cargo build --workspace
         language: system
-        files: ^spec/examples/
+        types: [rust]
+        pass_filenames: false
+
+      # CI job: doc
+      - id: cargo-doc
+        name: "ci: cargo doc"
+        entry: bash -c 'RUSTDOCFLAGS="-Dwarnings" cargo doc --workspace --no-deps'
+        language: system
+        types: [rust]
         pass_filenames: false

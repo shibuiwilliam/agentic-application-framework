@@ -81,14 +81,14 @@ async fn every_trace_step_carries_a_minimal_outcome() {
 #[tokio::test]
 async fn golden_suite_and_regression_report_interop() {
     let suite = GoldenSuite::from_yaml(
-        r#"
+        r"
 name: smoke
 threshold: 0.5
 cases:
   - id: a
     intent: hello
     expected: hello world
-"#,
+",
     )
     .unwrap();
     let judge = DeterministicJudge::default();

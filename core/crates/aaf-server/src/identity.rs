@@ -252,7 +252,7 @@ fn cmd_export_sbom(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     while i < args.len() {
         if args[i] == "--format" {
             if let Some(val) = args.get(i + 1) {
-                format = val.clone();
+                format.clone_from(val);
                 i += 2;
                 continue;
             }
