@@ -134,7 +134,7 @@ mod tests {
     use super::*;
     use crate::judge::DeterministicJudge;
 
-    const SAMPLE: &str = r#"
+    const SAMPLE: &str = r"
 name: order-processing
 threshold: 0.5
 cases:
@@ -144,7 +144,7 @@ cases:
   - id: stock-query
     intent: check stock for SKU-1
     expected: stock level for SKU-1
-"#;
+";
 
     #[tokio::test]
     async fn parses_and_runs_suite() {

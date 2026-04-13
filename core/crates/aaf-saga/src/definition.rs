@@ -117,7 +117,7 @@ impl SagaDefinition {
 mod tests {
     use super::*;
 
-    const SAMPLE: &str = r#"
+    const SAMPLE: &str = r"
 name: order-processing
 steps:
   - step: 1
@@ -132,7 +132,7 @@ steps:
     capability: cap-payment-execute
     compensation: cap-payment-refund
     compensation_type: mandatory
-"#;
+";
 
     #[test]
     fn parses_yaml() {

@@ -193,7 +193,7 @@ pub fn render_yaml(proposals: &[EntityProposal]) -> String {
 mod tests {
     use super::*;
 
-    const OPENAPI: &str = r#"
+    const OPENAPI: &str = r"
 openapi: 3.0.0
 info:
   title: Commerce API
@@ -214,7 +214,7 @@ components:
       properties:
         email: { type: string }
         vip: { type: boolean }
-"#;
+";
 
     #[test]
     fn imports_two_schemas_and_honours_x_aaf_entity_id() {

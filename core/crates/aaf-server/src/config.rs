@@ -134,7 +134,7 @@ impl ServerConfig {
 mod tests {
     use super::*;
 
-    const SAMPLE: &str = r#"
+    const SAMPLE: &str = r"
 project:
   name: aaf-prod
   version: 0.2.0
@@ -153,7 +153,7 @@ demo:
   domain: sales
   role: analyst
   scopes: [sales:read]
-"#;
+";
 
     #[test]
     fn parses_full_config() {
