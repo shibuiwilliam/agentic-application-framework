@@ -1,0 +1,27 @@
+name: ecommerce-golden
+threshold: 0.5
+cases:
+  - id: place-order
+    intent: place an order for SKU-1
+    expected: order placed for SKU-1
+
+  - id: stock-query
+    intent: check stock for SKU-1
+    expected: stock level for SKU-1 is 42
+
+  - id: cancel-order
+    intent: cancel order ord-123
+    expected: order ord-123 cancelled
+    min_score: 0.7
+
+  - id: sales-by-region
+    intent: show last month sales by region
+    expected: last month sales report by region
+
+  - id: stock-query-no-match
+    intent: check stock for SKU-999
+    expected: stock level for SKU-999 is 0
+
+  - id: place-order-bulk
+    intent: place a bulk order for 100 units of SKU-5
+    expected: bulk order placed for 100 units of SKU-5

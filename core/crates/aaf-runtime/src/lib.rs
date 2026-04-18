@@ -19,6 +19,7 @@ pub mod compensation;
 pub mod error;
 pub mod executor;
 pub mod graph;
+pub mod invoke;
 pub mod node;
 pub mod prelude;
 pub mod scheduler;
@@ -30,4 +31,8 @@ pub use compensation::CompensationChain;
 pub use error::RuntimeError;
 pub use executor::{ExecutionOutcome, GraphExecutor};
 pub use graph::{Graph, GraphBuilder, GraphValidationError};
-pub use node::{Node, NodeKind, NodeOutput};
+pub use invoke::{
+    GoverningToolExecutor, InProcessInvoker, InvocationContext, InvocationError, InvocationResult,
+    ServiceInvoker,
+};
+pub use node::{Node, NodeKind, NodeOutput, ToolCallRecord, ToolExecutor, DEFAULT_MAX_TOOL_CALLS};

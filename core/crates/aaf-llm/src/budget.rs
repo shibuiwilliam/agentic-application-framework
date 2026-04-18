@@ -83,6 +83,7 @@ mod tests {
             temperature: 0.0,
             max_output_tokens: 10,
             messages: vec![ChatMessage::user("hi")],
+            ..Default::default()
         })
         .await
         .unwrap();
@@ -105,6 +106,7 @@ mod tests {
                 temperature: 0.0,
                 max_output_tokens: 10,
                 messages: vec![ChatMessage::user("hi")],
+                ..Default::default()
             })
             .await
             .unwrap_err();

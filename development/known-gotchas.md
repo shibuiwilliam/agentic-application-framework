@@ -325,5 +325,6 @@ at least one distinct concept. Before adding a new crate, ask:
 3. Does it introduce a new *rule* or a new *contract type*? (If
    yes, a new crate may be justified.)
 
-As of iteration 8, the 21 crates are the minimum decomposition for
-the vision. Adding a 22nd crate should be an ADR-level decision.
+As of the current state, the 22 crates (including `aaf-learn` from
+E1 Slice B) are the minimum decomposition for the vision. Adding a
+23rd crate should be an ADR-level decision.

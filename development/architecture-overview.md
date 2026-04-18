@@ -76,7 +76,7 @@ entity-space instead of string-space (E2).
 
 ---
 
-## The 21 crates in three tiers
+## The 22 crates in three tiers
 
 ### Tier 1 — Pure contract / storage (sync, no orchestration)
 
@@ -100,6 +100,7 @@ entity-space instead of string-space (E2).
 | `aaf-llm` | `LLMProvider` trait, deterministic mock, value-based router, per-call budget enforcement. |
 | `aaf-identity` | X1 Slice A+B: DID, Keystore/Signer/Verifier, `AgentManifest`, `AgentSbom`, `Attestation`, `CapabilityToken`, `RevocationRegistry`. |
 | `aaf-eval` | E1 Slice A: `Judge` trait + `DeterministicJudge`, `GoldenSuite`, `Replayer`, `RegressionReport`. |
+| `aaf-learn` | E1 Slice B: `FastPathMiner`, `CapabilityScorer`, `RouterTuner`, `EscalationTuner`. Subscribes to trace events out-of-band (Rule 16). |
 | `aaf-surface` | E3 Slice A: `AppEvent`, `Situation`, `EventToIntentAdapter`, `ActionProposal`, `StateMutationProposal`, `StateProjection`, `ProposalLifecycle`, `SituationPackager`. Rules 19 and 20 enforced at construction. |
 
 ### Tier 3 — Composition (everything below wires into these)
@@ -131,10 +132,10 @@ upward-only edge.
                                ├────────────┼─────────────┐──────────┐
                                ▼            ▼             ▼          ▼
                            aaf-trace    aaf-trust    aaf-memory   aaf-llm
-                                           │            │
-                                           │            │
-                                           ▼            ▼
-                                      aaf-policy   aaf-eval     aaf-surface
+                               │           │            │
+                               │           │            │
+                               ▼           ▼            ▼
+                          aaf-learn   aaf-policy   aaf-eval     aaf-surface
                                            │
                                            ▼
                                       aaf-registry
@@ -160,6 +161,11 @@ upward-only edge.
                                            ▼
                                       aaf-server
 ```
+
+`aaf-learn` subscribes to `aaf-trace` observations via `TraceSubscriber`
+and writes back through `aaf-registry` (reputation), `aaf-llm` (routing
+weights), and `aaf-planner` (fast-path rules). All adaptations are
+spawned via `tokio::spawn` — never on the hot path (Rule 16).
 
 **Rule of thumb:** if your change introduces a new dep from a tier-1
 or tier-2 crate onto a tier-3 crate, you have gotten the layering
@@ -239,6 +245,11 @@ nowhere else.
 | R22 Identity is cryptographic (X1) | `aaf-identity::AgentDid` (public-key thumbprint only) |
 | R23 Signed manifest (X1) | `AgentManifest::build` signs at construction time |
 | R24 Provenance as BOM (X1) | `AgentSbom` with content hashes |
+| R34 SDKs are generated (F1) | `scripts/codegen/` → `sdk/*/contracts/` (planned) |
+| R35 Providers are observable (F2) | `ProviderMetrics` on every `ChatResponse` (planned) |
+| R36 Protocol bridges are governed (F3) | `McpClient::invoke_tool` gates through `PolicyEngine` (planned) |
+| R37 SDK ergonomics over completeness (F1) | Decorators delegate to generated types internally (planned) |
+| R38 Bridge failures are graceful (F3) | Unavailability removes capability from registry, never crashes (planned) |
 
 ---
 

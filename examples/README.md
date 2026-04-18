@@ -1,10 +1,12 @@
 # AAF Examples
 
-Eight runnable examples that demonstrate progressively deeper AAF
+Thirteen runnable examples that demonstrate progressively deeper AAF
 functionality. Start with `hello-agent`, then `order-saga`, then
 `resilient-query`, then `feedback-loop`, then `memory-context`,
 then `app-native-surface`, then `cross-cell-federation`, then
-`signed-agent`.
+`signed-agent`, then `eval-golden`, then `agentic-tool-loop`,
+then `parallel-orchestration`, then `sidecar-gateway`, then
+`governed-invocation`.
 
 ## Quick start
 
@@ -32,6 +34,21 @@ cargo test -p aaf-integration-tests --test cross_cell_federation_e2e
 
 # 8. Agent identity: sign manifest, export SBOM, verify, revoke
 cargo run -p aaf-server -- identity verify examples/signed-agent/manifest.yaml
+
+# 9. Eval golden suites: judge, regression, replay, CI reports
+cargo test -p aaf-integration-tests --test eval_golden_e2e
+
+# 10. Agentic tool loop: multi-turn tool calling, bounded loop (E4)
+cargo test -p aaf-integration-tests --test e4_tool_loop_smoke
+
+# 11. Parallel orchestration: ForkNode, diamond graph, compensation
+cargo test -p aaf-integration-tests --test parallel_orchestration_e2e
+
+# 12. Sidecar gateway: proxy, Rule 13 fallback, ACL, guards
+cargo test -p aaf-integration-tests --test sidecar_gateway_e2e
+
+# 13. Governed invocation: agent → tool → real handler (Pillar 2)
+cargo test -p aaf-integration-tests --test governed_invocation_e2e
 ```
 
 ## Examples
@@ -222,6 +239,159 @@ cargo run -p aaf-server -- identity verify examples/signed-agent/manifest.yaml
 cargo run -p aaf-server -- identity export-sbom examples/signed-agent/sbom.yaml
 cargo run -p aaf-server -- identity export-sbom examples/signed-agent/sbom.yaml --format cyclonedx
 ```
+
+---
+
+### [`eval-golden/`](eval-golden/)
+
+Demonstrates AAF's **offline evaluation harness** (`aaf-eval`) — the
+CI half of the Feedback Spine (Enhancement E1 Slice A). Loads a
+curated golden suite of `(intent, expected_output)` cases, scores
+each case with a deterministic Jaccard-based judge, builds regression
+reports comparing baseline vs. candidate runs, and detects trace-level
+divergences (cost drift, latency drift, step type changes) between two
+execution runs of the same intent.
+
+**Demonstrates:** golden suite YAML loading, `DeterministicJudge`
+scoring, `SuiteResult` aggregation (pass/fail per case, mean score),
+per-case `min_score` threshold override, `RegressionReport` building
+(improvements + regressions), `Replayer` divergence detection (cost
+drift, latency drift, step type change, status change, missing steps),
+`ReportWriter` JSON serialisation for CI consumption.
+
+**Run:**
+```bash
+cargo test -p aaf-integration-tests --test eval_golden_e2e
+```
+
+12 tests exercise: YAML parsing, echo provider scoring, perfect
+provider pass, partial match threshold enforcement, regression
+detection (improvements + regressions), no-regression baseline,
+multi-step trace divergence, identical trace silence, report JSON
+round-trip, status change detection, empty suite rejection,
+deterministic judge reproducibility.
+
+---
+
+### [`agentic-tool-loop/`](agentic-tool-loop/)
+
+Demonstrates AAF's **agentic tool loop** (Enhancement E4 Slice B):
+an agent that discovers capabilities as typed tools (Rule 25), calls
+them iteratively during LLM inference within a bounded loop (Rule 27),
+and produces a final answer grounded in tool results. This is what
+makes AAF agents real agents rather than one-shot LLM wrappers.
+
+**Demonstrates:** non-deterministic capability → Agent plan step,
+CapabilityContract → ToolDefinition conversion (Rule 25),
+multi-turn tool loop with message accumulation, max_tool_calls
+enforcement (Rule 27), tool call records in NodeOutput for trace
+integration (Rule 12).
+
+**Run:**
+```bash
+# Integration tests (multi-turn loop + bound enforcement)
+cargo test -p aaf-integration-tests --test e4_tool_loop_smoke
+
+# CLI pipeline (server creates AgentNode for non-deterministic steps)
+cargo run -p aaf-server -- run examples/agentic-tool-loop/aaf.yaml
+```
+
+2 tests exercise: multi-turn tool loop end-to-end (register
+non-deterministic cap, compile, plan, execute with tools, verify
+tool calls in output) and max_tool_calls bound enforcement.
+
+---
+
+### [`parallel-orchestration/`](parallel-orchestration/)
+
+Demonstrates AAF's **parallel execution** with `ForkNode` and
+**diamond-shaped graph topology**: a multi-service orchestration
+pattern where independent checks run concurrently before a final
+confirmation step. Also demonstrates compensation rollback when a
+downstream step fails after prior write steps have succeeded.
+
+**Demonstrates:** ForkNode parallel execution (tokio::spawn per child),
+diamond DAG validated by Kahn's algorithm, mixed sequential +
+parallel node topology, budget tracking across parallel branches,
+compensation chain rollback (Rule 9) when final step fails,
+trace recording across all steps including fork (Rule 12), policy
+enforcement at every step (Rule 6).
+
+**Run:**
+```bash
+# Integration tests (diamond execution, fork output, compensation)
+cargo test -p aaf-integration-tests --test parallel_orchestration_e2e
+
+# Validate the config
+cargo run -p aaf-server -- validate examples/parallel-orchestration/aaf.yaml
+```
+
+6 tests exercise: diamond graph execution (3 steps), fork node
+parallel join with output verification, confirm step receiving fork
+output, trace recording, compensation rollback when final step fails,
+YAML parsing.
+
+---
+
+### [`sidecar-gateway/`](sidecar-gateway/)
+
+Demonstrates AAF's **Agent Sidecar** — the service-integration
+pattern for microservices (Rule 3, Rule 13). The sidecar sits
+alongside an existing service, intercepts traffic, and adds AAF
+capabilities without modifying the service itself.
+
+**Demonstrates:** proxy routing (3 paths: FastPath, ForwardToAaf,
+DirectForward), Rule 13 transparent fallback (unhealthy → bypass
+AAF entirely), sidecar-local fast-path evaluation (Rule 4), anti-
+corruption layer with entity translation (AAF ↔ service model),
+local input/output guards (injection + PII), health monitoring
+with recovery, capability publishing into registry, field mapping
+from intent constraints to API fields.
+
+**Run:**
+```bash
+# Integration tests (15 tests covering all sidecar components)
+cargo test -p aaf-integration-tests --test sidecar_gateway_e2e
+
+# Validate the config
+cargo run -p aaf-server -- validate examples/sidecar-gateway/aaf.yaml
+```
+
+15 tests exercise: proxy routing (fast-path match, forward-to-aaf,
+Rule 13 fallback, health recovery), ACL translation (to-service,
+to-aaf, round-trip, unknown entity rejection), local guards
+(injection detection, PII flagging), capability publishing,
+field mapping (constraint translation, default values), full
+sidecar pipeline, YAML parsing.
+
+---
+
+### [`governed-invocation/`](governed-invocation/)
+
+Demonstrates AAF's **Capability Invocation Bridge** (Pillar 2
+Slice A): the complete path from an agent's tool call to a real
+service handler, governed by the policy engine. This is what makes
+AAF agents able to actually *do* things — not just plan them.
+
+**Demonstrates:** GoverningToolExecutor (bridges ToolExecutor →
+ServiceInvoker via registry), InProcessInvoker (closure-based
+handler registry), registry name-based lookup, call logging for
+observability, handler isolation (each capability has its own
+function), error propagation (unknown capabilities, handler
+failures), multi-capability dispatch through a single executor.
+
+**Run:**
+```bash
+# Integration tests (6 tests covering full invocation path)
+cargo test -p aaf-integration-tests --test governed_invocation_e2e
+
+# CLI demo (GoverningToolExecutor wired internally)
+cargo run -p aaf-server -- run examples/governed-invocation/aaf.yaml
+```
+
+6 tests exercise: full agent → tool → handler → response path,
+handler receives exact input, unknown capability error, handler
+error propagation, call log observability, YAML parsing.
 
 ---
 

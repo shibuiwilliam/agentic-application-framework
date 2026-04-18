@@ -1,0 +1,59 @@
+project:
+  name: sidecar-gateway
+  version: 0.2.0
+
+budget:
+  max_tokens: 5000
+  max_cost_usd: 0.50
+  max_latency_ms: 10000
+
+# Capabilities exposed through the sidecar.
+capabilities:
+  - id: cap-customer-lookup
+    name: customer lookup
+    description: look up a customer profile by ID
+    domains: [crm]
+    required_scope: crm:read
+    side_effect: read
+
+  - id: cap-order-history
+    name: order history
+    description: retrieve order history for a customer
+    domains: [crm]
+    required_scope: crm:read
+    side_effect: read
+
+# Sidecar-local fast-path rules.
+# When the intent matches these patterns, the sidecar routes directly
+# to the capability without consulting the AAF control plane.
+fast_path_rules:
+  - pattern:
+      intent_type: AnalyticalIntent
+      domain: crm
+    target_capability: cap-customer-lookup
+    field_mapping:
+      - from: customer_id
+        to: id
+    conditions:
+      - field: lookup_type
+        equals: by_id
+
+# ACL entity translation.
+# Maps between AAF's unified "commerce.Customer" model and the CRM
+# service's internal "Account" model.
+acl:
+  - entity_id: commerce.Customer
+    field_mappings:
+      - aaf_field: name
+        service_field: account_name
+      - aaf_field: segment
+        service_field: industry
+      - aaf_field: lifetime_value
+        service_field: total_revenue
+
+demo:
+  goal: show customer analysis report
+  domain: crm
+  role: operator
+  scopes:
+    - crm:read

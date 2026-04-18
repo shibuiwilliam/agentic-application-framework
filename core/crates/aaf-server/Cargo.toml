@@ -25,6 +25,7 @@ aaf-federation = { workspace = true }
 aaf-identity = { workspace = true }
 aaf-ontology = { workspace = true }
 aaf-transport = { workspace = true }
+async-trait = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }

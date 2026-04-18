@@ -20,6 +20,7 @@ aaf-intent = { workspace = true }
 aaf-planner = { workspace = true }
 aaf-runtime = { workspace = true }
 aaf-saga = { workspace = true }
+aaf-sidecar = { workspace = true }
 aaf-llm = { workspace = true }
 aaf-ontology = { workspace = true }
 aaf-identity = { workspace = true }

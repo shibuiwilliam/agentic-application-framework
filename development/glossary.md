@@ -218,7 +218,7 @@ entry. See `aaf-identity::did`.
 **E1 / E2 / E3**
 Wave-1 enhancements (see `PROJECT.md` §16):
 - **E1 — Feedback Spine** (Outcome contract, `aaf-eval`,
-  `aaf-learn` deferred to Slice B)
+  `aaf-learn` landed in Slice B)
 - **E2 — Domain Ontology Layer** (`aaf-ontology`, entity-aware
   planner/policy/memory/federation)
 - **E3 — Application-Native Surface** (`aaf-surface`,
@@ -247,7 +247,7 @@ so every crate can reference an entity without depending on
 `aaf-ontology` directly.
 
 **EventGateway**
-E3 Slice B — deferred. Will accept `AppEvent`s from a host
+E3 Slice B (deferred). Will accept `AppEvent`s from a host
 application and forward them to the intent compiler, with
 idempotency, rate limiting, and per-tenant budgets.
 
@@ -344,10 +344,10 @@ add an `LLMJudge`.
 ## L
 
 **LearnedRule**
-E1 Slice B — deferred. A fast-path rule proposed by the
-`fast_path_miner` in `aaf-learn`. Carries source, evidence,
-and approval state; must pass the approval workflow before
-going live.
+E1 Slice B. A fast-path rule proposed by the `fast_path_miner`
+in `aaf-learn`. Carries source, evidence, and approval state;
+must pass the approval workflow before going live. Lives in
+`aaf-learn::fast_path_miner`.
 
 **LineageRecord**
 Ontology contract (E2). Tracks which capability wrote which
@@ -544,8 +544,8 @@ inside LLM prompts.
 
 **ValueRouter**
 `aaf-llm::router::ValueRouter` — picks an `LLMProvider` based
-on risk tier. Slice B of E1 will plug in a `LearnedRoutingPolicy`
-driven by observed outcomes.
+on risk tier. `LearnedRoutingPolicy` (E1 Slice B) plugs in and
+adjusts routing weights driven by observed outcomes.
 
 ---
 
@@ -574,6 +574,26 @@ Wave-2 enhancements:
 
 ---
 
+## F
+
+**F1 / F2 / F3**
+Wave-4 critical infrastructure enhancements:
+- **F1 — Developer Experience Platform** (Python/TypeScript/Go
+  SDKs, CLI, code generation from JSON Schema)
+- **F2 — Live LLM Integration & Intelligent Model Routing**
+  (Anthropic/OpenAI/local providers, ValueRouter, ProviderMetrics,
+  pricing, budget pre-check)
+- **F3 — Universal Protocol Bridge** (MCP client/server, A2A
+  participant, ProtocolBridge unifier, governed external calls)
+
+**Fast Path Miner**
+An E1 Slice B subscriber in `aaf-learn` that proposes new
+fast-path rules from recurring agent-assisted patterns. Requires
+approval (Rule 18). See also: F2 (live providers make this
+operationally meaningful).
+
+---
+
 ## Acronyms — quick reference
 
 | Acronym | Expansion |
@@ -593,3 +613,5 @@ Wave-2 enhancements:
 | SBOM | Software Bill of Materials |
 | SDK | Software Development Kit |
 | X1/X2/X3 | Wave-2 enhancements (identity, knowledge, DX) |
+| F1/F2/F3 | Wave-4 infrastructure (SDKs, LLM providers, protocol bridges) |
+| SSE | Server-Sent Events |

@@ -54,6 +54,7 @@ SCHEMA_VALIDATOR  ?= scripts/schema_validate.py
         clean clean-all \
         tree outdated audit update deny \
         schema-validate schema-list ontology-lint \
+        version bump-major bump-minor bump-patch \
         todo loc \
         hooks hooks-pre-commit hooks-run \
         install-tools
@@ -169,6 +170,19 @@ schema-validate: ## Validate every YAML example in spec/examples/ against its JS
 ontology-lint: build ## Lint capability YAMLs for entity declarations (E2 Slice C)
 	target/debug/aaf-server ontology lint $(EXAMPLES_DIR)
 
+## ── Version management ───────────────────────────────────────────────
+version: ## Print the current project version
+	@cat VERSION
+
+bump-major: ## Bump major version (x.0.0) — breaking changes
+	@./scripts/bump-version.sh major
+
+bump-minor: ## Bump minor version (0.x.0) — new features
+	@./scripts/bump-version.sh minor
+
+bump-patch: ## Bump patch version (0.0.x) — bug fixes
+	@./scripts/bump-version.sh patch
+
 ## ── Repo inspection ───────────────────────────────────────────────────
 todo: ## Grep the workspace for TODO / FIXME / XXX markers
 	@grep -rn --include='*.rs' -E "TODO|FIXME|XXX" core/ || echo "No markers found."
@@ -185,6 +199,7 @@ hooks: ## Install git hooks (pre-commit: fmt+clippy, pre-push: full CI)
 hooks-pre-commit: ## Install pre-commit framework hooks (alternative to 'make hooks')
 	@command -v pre-commit >/dev/null 2>&1 || { \
 		echo "pre-commit is not installed. Run: pip install pre-commit"; exit 1; }
+	@git config --unset-all core.hooksPath 2>/dev/null || true
 	pre-commit install
 	pre-commit install --hook-type pre-push
 	@echo "pre-commit hooks installed"

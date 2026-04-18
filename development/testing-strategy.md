@@ -5,7 +5,7 @@
 > `IMPLEMENTATION_PLAN.md` has followed this strategy — please
 > continue doing so.
 
-Current total: **463 tests passing across 22 crates, 0 failures**.
+Current total: **554 tests passing across 22 crates, 0 failures**.
 
 ---
 
@@ -99,10 +99,11 @@ iteration 8 that list includes every hot-path crate plus
   or (b) add a new schema and a new prefix mapping in
   `schema_validate.py`.
 
-**Current status:** 9/9 examples validate. Two examples
-(`manifest-order-agent.yaml`, `sbom-order-agent.yaml`) are
-intentionally unmapped — they are consumed by
-`aaf-identity::manifest::from_yaml` directly, not by a schema.
+**Current status:** 11/11 examples validate against their schemas.
+Two examples (`manifest-order-agent.yaml`, `sbom-order-agent.yaml`)
+are intentionally unmapped in the prefix map — they are consumed by
+`aaf-identity::manifest::from_yaml` directly, not by a schema, and
+print `SKIP` in the validator output.
 
 ---
 

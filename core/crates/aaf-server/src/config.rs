@@ -81,6 +81,22 @@ pub struct CapabilitySeed {
     /// Required scope.
     #[serde(default = "default_scope")]
     pub required_scope: String,
+    /// Side-effect classification (default: read).
+    #[serde(default = "default_side_effect")]
+    pub side_effect: String,
+    /// Whether the capability is deterministic (default: true).
+    /// Non-deterministic capabilities produce `PlannedStepKind::Agent`
+    /// steps and use the agentic tool loop (E4).
+    #[serde(default = "default_true")]
+    pub deterministic: bool,
+}
+
+fn default_side_effect() -> String {
+    "read".into()
+}
+
+fn default_true() -> bool {
+    true
 }
 
 fn default_scope() -> String {

@@ -10,10 +10,11 @@ use crate::ids::CapabilityId;
 use serde::{Deserialize, Serialize};
 
 /// Side-effect classification used by the policy engine to gate execution.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum SideEffect {
     /// Pure function — no observable effect.
+    #[default]
     None,
     /// Reads from a system of record.
     Read,

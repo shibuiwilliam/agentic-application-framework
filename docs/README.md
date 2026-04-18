@@ -48,15 +48,21 @@ architecture rules).
 ### Enhancement design notes
 
 - **[enhancements/README.md](enhancements/README.md)** — index of
-  the two waves and the six enhancements
+  the enhancement waves
 - **[enhancements/e2-domain-ontology.md](enhancements/e2-domain-ontology.md)**
   — E2 Domain Ontology Layer (Slices A + B + C complete)
 - **[enhancements/e1-feedback-spine.md](enhancements/e1-feedback-spine.md)**
-  — E1 Feedback Spine (Slices A + B complete)
+  — E1 Feedback Spine (Slices A + B complete; Slice C next)
 - **[enhancements/e3-app-native-surface.md](enhancements/e3-app-native-surface.md)**
   — E3 Application-Native Surface (Slice A complete)
 - **[enhancements/x1-agent-identity.md](enhancements/x1-agent-identity.md)**
   — X1 Agent Identity, Provenance & Supply Chain (complete)
+- **[enhancements/f2-llm-integration.md](enhancements/f2-llm-integration.md)**
+  — F2 Live LLM Integration & Intelligent Model Routing (Slice A landed)
+- **[enhancements/f1-developer-experience.md](enhancements/f1-developer-experience.md)**
+  — F1 Developer Experience Platform — SDKs + CLI (planned)
+- **[enhancements/f3-protocol-bridges.md](enhancements/f3-protocol-bridges.md)**
+  — F3 Universal Protocol Bridge — MCP + A2A (planned)
 
 ### Decisions
 
@@ -91,4 +97,5 @@ and are no longer separate files:
 
 - `PROJECT_AafService.md` → `PROJECT.md` §19 (Service Architecture Integration)
 - `CLAUDE_AaFService.md` → already a subset of `CLAUDE.md` (removed)
-- `PROJECT_ENHANCE.md` / `CLAUDE_ENHANCE.md` → `PROJECT.md` §§16–18 and `CLAUDE.md` rules 14–24 (merged previously)
+- `PROJECT_ENHANCE.md` → `PROJECT.md` §§16–18 (Wave 1/2 enhancements) and §20 (Wave 4 critical infrastructure)
+- `CLAUDE_ENHANCE.md` → `CLAUDE.md` rules 14–24 (Wave 1/2), rules 34–38 (Wave 4), and rules 39–43 (Three Pillars)

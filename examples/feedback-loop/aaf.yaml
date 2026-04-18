@@ -1,6 +1,6 @@
 project:
   name: feedback-loop
-  version: 0.1.0
+  version: 0.2.0
 
 budget:
   max_tokens: 5000
@@ -46,7 +46,7 @@ learning:
     failure_delta: -0.10
 
 demo:
-  goal: run feedback loop scenario
+  goal: show sales report trends
   domain: sales
   role: analyst
   scopes:

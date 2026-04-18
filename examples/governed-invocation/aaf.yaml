@@ -1,0 +1,35 @@
+project:
+  name: governed-invocation
+  version: 0.1.0
+
+budget:
+  max_tokens: 10000
+  max_cost_usd: 1.00
+  max_latency_ms: 30000
+
+# Two capabilities: one agent-driven (non-deterministic) and one
+# deterministic. The agent capability uses the GoverningToolExecutor
+# to invoke a real in-process handler function.
+capabilities:
+  - id: cap-product-search
+    name: product search
+    description: search the product catalog by keyword or category
+    domains: [catalog]
+    required_scope: catalog:read
+    side_effect: read
+    deterministic: false
+
+  - id: cap-price-lookup
+    name: price lookup
+    description: retrieve current pricing for a product ID
+    domains: [catalog]
+    required_scope: catalog:read
+    side_effect: read
+    deterministic: false
+
+demo:
+  goal: show product catalog analysis
+  domain: catalog
+  role: analyst
+  scopes:
+    - catalog:read

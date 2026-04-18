@@ -139,22 +139,20 @@ Within each enhancement, three slices:
 an enhancement whose Slice B is not done, stop — the SDK will need
 a rewrite once the hot-path integration lands.
 
-As of iteration 8:
+Current status:
 
 | Enhancement | A | B | C |
 |---|---|---|---|
 | E2 Domain Ontology | ✓ iter 4 | ✓ iter 7 | ✓ iter 8 |
-| E1 Feedback Spine | ✓ iter 4 | **next** | deferred |
-| E3 App-Native Surface | ✓ iter 4 | deferred | deferred |
-| X1 Agent Identity | ✓ iter 6 | ✓ iter 9 | deferred |
+| E1 Feedback Spine | ✓ iter 4 | ✓ | **next** (iter 11) |
+| E3 App-Native Surface | ✓ iter 4 | deferred (iter 12) | deferred |
+| X1 Agent Identity | ✓ iter 6 | ✓ iter 9 | ✓ iter 10 |
 | X2 Knowledge Fabric | deferred | deferred | deferred |
 | X3 DX Surface | deferred | deferred | deferred |
 
-**Iteration 9's next target** is E1 Slice B: the `aaf-learn` crate
-plus its subscribers (fast-path miner, capability scorer, router
-tuner, escalation tuner), all plugged into the existing
-`aaf-trace` observation stream through a non-blocking subscriber
-contract. See `PROJECT.md` §16.1 and `CLAUDE.md` rules 15-18.
+**Next target** is E1 Slice C: the `aaf learn` CLI subcommand,
+`make test-semantic-regression` target, and governance docs for
+the learning pipeline. See `development/next-slices.md`.
 
 ---
 

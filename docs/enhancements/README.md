@@ -3,14 +3,13 @@
 > One-page design summaries for each enhancement program.
 >
 > The complete design rationale and enhancement rules are now
-> consolidated into `PROJECT.md` (sections 16-18) and `CLAUDE.md`
-> (rules 14-24). The former `PROJECT_ENHANCE.md` and
-> `CLAUDE_ENHANCE.md` have been merged and removed. Detailed
-> slice-level implementation specifics.
+> consolidated into `PROJECT.md` (sections 16-20) and `CLAUDE.md`
+> (rules 14-24 + 34-38). The former `PROJECT_ENHANCE.md` and
+> `CLAUDE_ENHANCE.md` have been merged and removed.
 
 ---
 
-## Two waves
+## Four waves
 
 AAF's post-v0.1 work is organised into two waves.
 
@@ -41,6 +40,20 @@ Three more enhancements built on Wave 1's foundation.
 
 Wave 2 lands **strictly in the order X1 -> X2 -> X3**.
 
+### Wave 4 — Critical infrastructure
+
+Three prerequisites for framework viability — SDKs, live LLM
+providers, and protocol bridges.
+
+| # | Enhancement | One-liner |
+|---|---|---|
+| **F2** | [Live LLM Integration](f2-llm-integration.md) | Real providers (Anthropic, OpenAI, local), value-based routing, ProviderMetrics |
+| **F1** | [Developer Experience Platform](f1-developer-experience.md) | Python/TypeScript/Go SDKs, CLI, code generation from JSON Schema |
+| **F3** | [Universal Protocol Bridge](f3-protocol-bridges.md) | MCP client/server, A2A participant, governed external calls |
+
+Wave 4 lands **strictly in the order F2 -> F1 -> F3**. May be
+interleaved with Wave 3 (E4/E5/E6).
+
 ---
 
 ## Status at a glance
@@ -53,6 +66,10 @@ E3 App-Native      done        pending     pending
 X1 Identity        done        done        done       <- complete
 X2 Knowledge       pending     pending     pending
 X3 DX Surface      pending     pending     pending
+F2 LLM Integration done        pending     pending    <- Wave 4 (Slice A landed)
+P2 Cap. Invocation done        pending     pending    <- Wave 4 (Slice A landed)
+F1 Developer XP    planned     planned     planned    <- Wave 4
+F3 Protocol Bridge planned     planned     planned    <- Wave 4
 ```
 
 See `../../development/roadmap.md` for the authoritative status
@@ -83,8 +100,9 @@ order:
 1. The enhancement page in this directory (user-facing summary).
 2. `PROJECT.md` sections 16-18 at the repo root (enhancement
    designs).
-3. `CLAUDE.md` rules 14-24 (enhancement architecture rules and
-   slicing strategy).
+3. `CLAUDE.md` rules 14-24 + 34-43 (enhancement architecture rules,
+   Wave 4 infrastructure rules, Three Pillars rules, and slicing
+   strategy).
 4. `../../development/next-slices.md` (the concrete playbook for
    the next slices).
 5. `../../development/iteration-playbook.md` (the 7-step cycle).
@@ -100,4 +118,4 @@ rules 14-24.
 - [../README.md](../README.md) — the docs index
 - [../../PROJECT.md](../../PROJECT.md) — the vision (including
   enhancement designs in sections 16-18)
-- [../../CLAUDE.md](../../CLAUDE.md) — architectural rules 1-24
+- [../../CLAUDE.md](../../CLAUDE.md) — architectural rules 1-24 + 34-43

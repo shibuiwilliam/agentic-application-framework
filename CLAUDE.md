@@ -849,7 +849,7 @@ Each enhancement is split into three ordered slices (A -> B -> C). Every slice m
 3. Keep `cargo clippy --workspace` clean
 4. Leave the code base in a shippable state
 
-**Work order:** E2 -> E1 -> E3 (Wave 1), then X1 -> X2 -> X3 (Wave 2). Within an enhancement, slices land in order A -> B -> C. Never leapfrog.
+**Work order:** E2 -> E1 -> E3 (Wave 1), then X1 -> X2 -> X3 (Wave 2), then F2 -> F1 -> F3 (Wave 4). Within an enhancement, slices land in order A -> B -> C. Never leapfrog.
 
 **Additional crates introduced by enhancements:**
 
@@ -860,6 +860,8 @@ Each enhancement is split into three ordered slices (A -> B -> C). Every slice m
 | `aaf-learn` | E1 | Trace subscribers: fast-path miner, capability scorer, router tuner, escalation tuner |
 | `aaf-surface` | E3 | AppEvent, Situation, ActionProposal, StateProjection, EventRouter |
 | `aaf-identity` | X1 | DID, signed manifests, SBOM, capability tokens, revocation |
+| `aaf-mcp` | F3 | MCP client + server bridge (adapters/mcp/) |
+| `aaf-a2a` | F3 | A2A participant bridge (adapters/a2a/) |
 
 ---
 
@@ -878,3 +880,325 @@ Each enhancement is split into three ordered slices (A -> B -> C). Every slice m
 | Intent Resolution | >97% |
 | Sidecar overhead | <5ms p99 |
 | LLM cost/intent | <$0.01 avg |
+
+---
+
+## Enhancement Architecture Rules (Wave 4, extending Rules 14–24)
+
+### Rule 34: SDKs Are Generated, Not Hand-Written
+All contract types in SDKs are generated from `spec/schemas/` JSON Schemas. The generation pipeline runs as part of `make codegen`. Hand-written SDK types that duplicate schema definitions are a build error. SDK-specific ergonomic wrappers (decorators, builders) are hand-written but delegate to generated types internally.
+
+### Rule 35: Providers Are Observable
+Every LLM provider call records: `model_name`, `input_tokens`, `output_tokens`, `cost_usd`, `latency_ms`, `stop_reason`, and `rate_limit_remaining`. This data is wired into the trace system (Rule 12) and budget tracker (Rule 8). Provider calls without observation recording are a bug.
+
+### Rule 36: Protocol Bridges Are Governed
+Every external protocol interaction (MCP tool call, A2A task delegation, REST API call) passes through the policy engine (Rule 6), respects trust boundaries (Rule 22), charges the budget (Rule 8), and records an observation (Rule 12). Ungoverned external calls are architecturally impossible.
+
+### Rule 37: SDK Ergonomics Over Completeness
+SDKs should make the common case trivial (define a capability in 5 lines, submit an intent in 3 lines). A Python decorator that "just works" is worth more than 100% contract coverage with verbose builders. Ergonomics are a first-class design constraint, not a nice-to-have.
+
+### Rule 38: Bridge Failures Are Graceful
+When an MCP server is unreachable, an A2A agent is unavailable, or an external API times out, the bridge degrades gracefully following the Degradation Chain (Levels 0-4). Unavailability removes the capability from the active registry; it never causes a pipeline crash.
+
+### Rule 39: Providers Use reqwest, Not SDKs
+LLM providers use `reqwest` directly against provider HTTP APIs. Do not import `anthropic-sdk`, `openai`, or any provider-specific Rust crate. This keeps the dependency tree minimal and gives full control over retry logic, timeout handling, and observability. Every HTTP call records `ProviderMetrics`.
+
+### Rule 40: Every External Call Is Governed
+No HTTP request, gRPC call, MCP tool invocation, or A2A task delegation may bypass the policy engine. The `CapabilityDispatcher` enforces: policy pre-check (Rule 6 PreStep) → invoke → policy post-check (Rule 6 PostStep) → record observation (Rule 12) → charge budget (Rule 8). Ungoverned external calls are a build-breaking bug.
+
+### Rule 41: Fallback to Mock Is Always Available
+Every real provider (Anthropic, OpenAI, HTTP invoker, MCP bridge) must degrade gracefully when its target is unreachable. The degradation chain (Levels 0–4) applies to providers, not just the overall system. Tests must verify both the happy path and the fallback path.
+
+### Rule 42: SDKs Are Thin Clients
+SDKs (`sdk/python/`, `sdk/typescript/`) are HTTP clients that talk to `aaf-server`'s REST API. They do not embed Rust code, do not run the policy engine locally, and do not include any business logic. Contract types are generated from `spec/schemas/` (Rule 34). Ergonomic wrappers (decorators, builders) are hand-written but delegate to generated types.
+
+### Rule 43: The Hello World Must Work in 5 Minutes
+The `examples/real-world-hello/` example must be runnable by a developer with no Rust knowledge. `docker compose up` starts everything. `curl` or the Python SDK demonstrates the flow. If it takes longer than 5 minutes from clone to "wow", the onboarding is broken.
+
+---
+
+## Wave 4 Implementation Guide (F2 → F1 → F3)
+
+### F2 — Live LLM Integration & Intelligent Model Routing
+
+#### Provider Trait Extension (`aaf-llm`)
+
+Add `ProviderMetrics` to every response for observability (Rule 35):
+
+```rust
+/// Metrics recorded for every LLM call.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProviderMetrics {
+    pub model: String,
+    pub input_tokens: u64,
+    pub output_tokens: u64,
+    pub cost_usd: f64,
+    pub latency_ms: u64,
+    pub rate_limit_remaining: Option<u32>,
+    pub provider: String,
+}
+```
+
+#### Anthropic Claude Provider (`aaf-llm/src/anthropic.rs`)
+
+```rust
+pub struct AnthropicProvider {
+    client: reqwest::Client,
+    api_key: String,              // from env ANTHROPIC_API_KEY
+    base_url: String,             // default: https://api.anthropic.com
+    default_model: String,        // default: claude-sonnet-4-6-20250514
+    max_retries: u32,             // default: 3
+}
+```
+
+Request mapping: AAF `ChatRequest` messages → Anthropic Messages API format, including tools/tool_choice. Response mapping extracts real token counts, calculates cost from pricing table, records latency. Rate limits handled with exponential backoff.
+
+#### OpenAI Provider (`aaf-llm/src/openai.rs`)
+
+Maps `ChatRequest` → OpenAI Chat Completions API. Tools mapped to functions format.
+
+#### Local Provider (`aaf-llm/src/local.rs`)
+
+OpenAI-compatible API targeting local endpoints (Ollama, vLLM). Default `http://localhost:11434`.
+
+#### Value-Based Router (`aaf-llm/src/router.rs`)
+
+```rust
+pub struct ValueRouter {
+    providers: Vec<Arc<dyn LLMProvider>>,
+    model_catalog: Vec<ModelProfile>,
+    health: Arc<ProviderHealth>,
+}
+```
+
+Routing algorithm: filter by capability (tools/streaming) → filter by health → filter by budget → filter by latency → filter by classification → score by cost (40%) + latency (30%) + capability (30%) → select highest.
+
+#### Dependencies
+
+Add to `aaf-llm/Cargo.toml`: `reqwest` (with json+stream features), `wiremock` (dev, for testing).
+
+Use `reqwest` directly instead of provider SDKs for unified error handling and minimal dependency tree.
+
+#### F2 Slices
+
+**Slice A — Status: LANDED:** `AnthropicProvider` (`aaf-llm/src/anthropic.rs`) + `ProviderMetrics` + `ModelPricing` (`aaf-llm/src/pricing.rs`) + MockProvider update + rate limit handling with exponential backoff. Implemented with `reqwest` (Rule 39), wiremock tests.
+**Slice B:** `OpenAiProvider` + `LocalProvider` + `ValueRouter` with scoring + health tracking + auto-fallback
+**Slice C:** Streaming (`chat_stream`) + budget pre-check + provider configuration from config file + classification-aware filtering
+
+### F1 — Developer Experience Platform
+
+#### Python SDK (`sdk/python/`)
+
+Key components:
+- `@capability` decorator with `CapabilityMeta` (name, side_effect, sla, etc.)
+- `@guard.input()` / `@guard.output()` decorators
+- `@compensation(for_capability=...)` decorator
+- `AafClient` with `submit_intent()` and `submit_intent_stream()` via `httpx`
+- `MockRuntime` for in-process testing without starting the Rust server
+- CLI: `aaf init`, `aaf dev`, `aaf test`, `aaf run`, `aaf trace`
+
+Dependencies: `httpx>=0.27`, `pydantic>=2.0`, `click>=8.0`. Dev: `pytest`, `ruff`, `mypy --strict`.
+
+#### TypeScript SDK (`sdk/typescript/`)
+
+Type-safe capability builder with `zod` schema validation. `AafClient` class. EventSource consumer for streaming. Vitest test utilities.
+
+#### Go SDK (`sdk/go/`)
+
+Minimal surface: `AafClient`, capability registration, sidecar builder, `context.Context`-threaded.
+
+#### Contract Code Generation (`scripts/codegen/`)
+
+`generate.py` reads `spec/schemas/*.schema.json` and outputs:
+- Python: pydantic v2 models
+- TypeScript: zod schemas + TS interfaces
+- Go: Go structs
+
+Run via `make codegen`.
+
+#### F1 Slices
+
+**Slice A:** Python SDK core — codegen, `@capability`, `@guard`, `@compensation`, `AafClient`, `MockRuntime`, tests
+**Slice B:** TypeScript SDK + CLI — codegen, builders, client, streaming, `aaf init/dev/test/run/trace`
+**Slice C:** Go SDK + advanced builders — client, sidecar, wrapper, saga builders, end-to-end example
+
+### F3 — Universal Protocol Bridge (MCP + A2A)
+
+#### MCP Client (`adapters/mcp/`)
+
+```rust
+pub struct McpClient {
+    transport: Box<dyn McpTransport>,
+    registry: Arc<dyn CapabilityRegistry>,
+    policy: Arc<PolicyEngine>,
+    budget: Arc<BudgetTracker>,
+    trace: Arc<TraceRecorder>,
+}
+```
+
+`discover_and_register()`: calls `tools/list`, maps each MCP tool → `CapabilityContract` (prefixed `mcp:{server}:`), registers in AAF registry.
+
+`invoke_tool()`: policy check (PreStep) → budget check → `tools/call` → policy check (PostStep) → record observation → charge budget → return result.
+
+Three transports: `stdio` (local), `sse` (remote), `streamable_http`.
+
+#### MCP Server (`adapters/mcp/server/`)
+
+Exposes AAF capabilities as MCP tools. `handle_list_tools()` queries registry. `handle_call_tool()` builds `IntentEnvelope` and submits to runtime (full governance applies).
+
+#### A2A Participant (`adapters/a2a/`)
+
+Agent Card serving, task lifecycle (send/get/cancel), DID-based trust propagation (Rule 22), SSE streaming for updates, federation agreement enforcement.
+
+#### ProtocolBridge Unifier
+
+```rust
+impl CapabilityInvoker for ProtocolBridge {
+    async fn invoke(&self, capability_id, input, intent) -> Result<Value, InvokeError> {
+        match self.resolve_protocol(capability_id) {
+            Protocol::Local => self.local_invoker.invoke(...),
+            Protocol::Mcp(server) => self.mcp_client.invoke_tool(...),
+            Protocol::A2a(agent) => self.a2a_participant.handle_task_send(...),
+        }
+    }
+}
+```
+
+#### F3 Slices
+
+**Slice A:** MCP client — stdio transport, `McpClient`, tool mapping, governed invocation, config schema
+**Slice B:** MCP server + SSE/streamable HTTP transports, wire into `aaf-server`
+**Slice C:** A2A participant + `ProtocolBridge` unifier, wire into `aaf-server`
+
+## Three Pillars — Detailed Slice Guide
+
+The Three Pillars (Brain, Hands, Gateway) map onto F2, F1, F3 but provide finer-grained implementation detail per slice.
+
+| Pillar | Codename | What It Adds | Primary Crates |
+|--------|----------|-------------|----------------|
+| 1 | **Brain** | Real LLM providers, intelligent intent/planning/recovery | `aaf-llm`, `aaf-intent`, `aaf-planner`, `aaf-saga` |
+| 2 | **Hands** | Real service invocation via HTTP, MCP, A2A | `aaf-runtime`, `aaf-transport`, `aaf-server` |
+| 3 | **Gateway** | HTTP API, config-driven setup, Python/TS SDKs | `aaf-server`, `sdk/python/`, `sdk/typescript/` |
+
+**Implementation order:** P1-A and P2-A run in parallel → P1-B, P2-B, and P3-A in parallel → P1-C, P2-C, P3-B → P3-C.
+
+### P1 (Brain) Slices
+
+**P1 Slice A — Status: LANDED.** `AnthropicProvider` in `aaf-llm/src/anthropic.rs`, `ModelPricing` in `aaf-llm/src/pricing.rs`. Request/response mapping for Anthropic Messages API. Retry with exponential backoff on 429/529/5xx. Pricing-based cost calculation. Tests via `wiremock`. `reqwest` 0.12 added.
+
+**P1 Slice B:** OpenAI + Local providers + Enhanced Router.
+- `aaf-llm/src/openai.rs` — OpenAI Chat Completions provider (same pattern as Anthropic, maps tools to functions format)
+- `aaf-llm/src/local.rs` — OpenAI-compatible local provider (Ollama/vLLM, default `http://localhost:11434/v1`, zero-cost pricing, no 429 retry)
+- `aaf-llm/src/health.rs` — `ProviderHealth` with sliding window (100 calls), `success_rate()`, `p50_latency()`, `p99_latency()`, `is_healthy()` (success_rate > 0.5)
+- `aaf-llm/src/router.rs` — filter unhealthy providers before scoring, retry with next-best on failure, record fallback in trace
+
+**P1 Slice C:** LLM-Powered Intelligence + Streaming.
+- `aaf-intent/src/llm_classifier.rs` — LLM-based intent classification (structured JSON output, confidence > 0.7, falls back to RuleClassifier)
+- `aaf-planner/src/llm_planner.rs` — LLM-based plan generation (system prompt includes available capabilities, validates against composition safety)
+- `aaf-saga/src/llm_recovery.rs` — LLM-based failure analysis (returns `RecoveryDecision`, falls back to rule-based)
+- `aaf-llm/src/provider.rs` — add `chat_stream()` (optional, default returns error)
+- `aaf-llm/src/anthropic.rs` — implement streaming
+- Key principle: LLM enhances, never replaces. Every LLM-powered component has a deterministic fallback.
+
+### P2 (Hands) Slices
+
+**P2 Slice A — Status: LANDED.** `GoverningToolExecutor`, `InProcessInvoker`, `ServiceInvoker` in `aaf-runtime/src/invoke.rs`. `CapabilityInvoker` trait with `InvocationContext` and `InvocationResult`. HTTP invoker in `aaf-transport`. `CapabilityDispatcher` dispatches by endpoint kind. `governed-invocation` example demonstrates the full chain.
+
+**P2 Slice B:** MCP Client Bridge + MCP Server.
+- `aaf-transport/src/mcp_client.rs` — `McpClient` with `McpTransportKind::Stdio` / `McpTransportKind::Sse`
+- Discovery maps MCP tools → AAF capabilities (prefixed `mcp:{server_name}:{tool_name}`, conservative `SideEffect::Write` default)
+- `aaf-server/src/mcp_server.rs` — Expose AAF capabilities as MCP tools, `handle_call_tool` builds `IntentEnvelope` and submits to runtime (fully governed)
+- Add MCP to `CapabilityDispatcher`
+
+**P2 Slice C:** A2A Bridge + InProcess Invoker.
+- `aaf-transport/src/a2a_client.rs` — A2A protocol client (Agent Card fetch, task POST/poll, DID verification per Rule 22, federation boundary enforcement)
+- `aaf-runtime/src/invoke_inprocess.rs` — In-process capability invoker for wrapper pattern (near-zero overhead, `EndpointKind::InProcess`)
+- Add A2A and InProcess to `CapabilityDispatcher`
+
+### P3 (Gateway) Slices
+
+**P3 Slice A:** HTTP API Server + Config-Driven Setup.
+- `aaf-server/src/api/rest.rs` — axum handlers: `POST /v1/intents`, `GET /v1/intents/{id}`, `POST /v1/capabilities`, `GET /v1/capabilities`, `GET /v1/capabilities/discover?q=`, `GET /v1/traces/{id}`, `GET /v1/health`
+- `aaf-server/src/config.rs` — `AafConfig` (server, llm, capabilities, policies, trust) parsed from YAML
+- Config-driven wiring: `serve` subcommand loads config, instantiates providers and capabilities
+
+**P3 Slice B:** Python SDK + TypeScript SDK + Code Generation.
+- `sdk/python/` — `AafClient` (httpx), `@capability`/`@guard`/`@compensation` decorators, generated pydantic v2 contracts, `MockRuntime`
+- `sdk/typescript/` — `AafClient`, zod-validated contracts, EventSource streaming
+- `scripts/codegen/generate.py` — reads `spec/schemas/*.schema.json`, outputs pydantic models + zod schemas
+- Run via `make codegen`, verify with `--check` flag
+
+**P3 Slice C:** End-to-End Hello World + Documentation.
+- `examples/real-world-hello/` — docker-compose (AAF server + FastAPI demo service), `aaf.yaml` config, capability contracts, `test.sh` smoke test
+- Must satisfy Rule 43: clone → "wow" in 5 minutes
+
+---
+
+### Wave 4 Validation Gates (per slice)
+
+Every slice must pass before merge:
+
+1. `cargo build --workspace` — zero warnings
+2. `cargo test --workspace` — zero failures, test count ratchets up
+3. `make clippy` — zero warnings
+4. `make schema-validate` — all examples valid
+5. New Rust public types have `Debug, Clone, Serialize, Deserialize`
+6. New Rust public items have `///` doc comments
+7. No `unwrap()` in Rust library code
+8. New `#[serde(default)]` on all wire-format fields
+9. Python: `ruff check` + `mypy --strict` clean
+10. TypeScript: `tsc --noEmit` + `eslint` clean
+11. Go: `golangci-lint run` clean
+
+### Key Design Decisions
+
+**HTTP-first for SDK clients:** No code generation required, works everywhere (browsers, serverless, edge), easier to debug. gRPC used for internal runtime communication.
+
+**reqwest for LLM providers:** Avoids heavy dependency trees from provider SDKs, gives fine-grained control over retry/timeout/streaming, unified error handling.
+
+**MCP as Rust crate (not separate service):** MCP tool calls must go through the policy engine (in-process), sub-millisecond overhead for local MCP servers, configuration-gated.
+
+**SDKs as thin clients:** Runtime is Rust; SDKs are Python/TS/Go — no FFI complexity. Single deployment of runtime serves all languages. Policy enforcement happens server-side.
+
+---
+
+## Dependency Management
+
+New external dependencies introduced by the three pillars:
+
+| Crate/Package | Used By | Purpose |
+|---|---|---|
+| `reqwest` 0.12 | aaf-llm, aaf-transport | HTTP client for LLM APIs and service invocation |
+| `wiremock` 0.6 | dev-dependencies | HTTP mock server for testing |
+| `axum` 0.7 | aaf-server | HTTP API server |
+| `tower` 0.4 | aaf-server | Middleware (timeout, cors, tracing) |
+| `tower-http` 0.5 | aaf-server | HTTP-specific tower middleware |
+| `tokio-stream` 0.1 | aaf-llm | Streaming response handling |
+| `httpx` >=0.27 | sdk/python | Python HTTP client |
+| `pydantic` >=2.0 | sdk/python | Python data validation |
+| `click` >=8.0 | sdk/python | Python CLI |
+| `zod` >=3.22 | sdk/typescript | TypeScript schema validation |
+
+All Rust dependencies are pinned to exact versions (existing convention).
+
+---
+
+## What NOT to Do
+
+- Do NOT add `anthropic` or `openai` Rust crates as dependencies (Rule 39: use reqwest)
+- Do NOT embed Rust code in Python/TypeScript SDKs (Rule 42: thin HTTP clients)
+- Do NOT add real database drivers yet (Rule 11: in-memory backends are sufficient)
+- Do NOT build a dashboard UI (CLI + REST API is sufficient)
+- Do NOT modify existing contract types unless absolutely necessary
+- Do NOT break any existing tests — all 554 must continue passing
+- Do NOT add optional features or feature flags for providers — they are always compiled
+- Do NOT hardcode API keys anywhere — always from environment variables
+
+---
+
+## Codebase Stats
+
+- Tests: 554
+- Examples: 13
+- Estimated size: ~26K lines
+- Version: 0.2.0

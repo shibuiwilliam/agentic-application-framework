@@ -18,120 +18,99 @@
 | Enhancement | A | B | C |
 |---|---|---|---|
 | E2 Domain Ontology | ✓ | ✓ | ✓ |
-| E1 Feedback Spine | ✓ | **next** | pending |
+| E1 Feedback Spine | ✓ | ✓ | **next** |
 | E3 App-Native Surface | ✓ | pending | pending |
-| X1 Agent Identity | ✓ | ✓ | pending |
+| X1 Agent Identity | ✓ | ✓ | ✓ |
 | X2 Knowledge Fabric | pending | pending | pending |
 | X3 DX Surface | pending | pending | pending |
+| F2 LLM Integration | **✓** | pending | pending |
+| F1 Developer XP | planned | planned | planned |
+| F3 Protocol Bridge | planned | planned | planned |
+| P2 Capability Invocation | **✓** | pending | pending |
 
-Per `PROJECT.md` §18 the next iterations are
-**E1 Slice C → E3 Slice B → E3 Slice C**, in that order. Every
-one is substantial; scoping each as its own iteration is the
-right move.
+Per `PROJECT.md` §18 and §20 the next iterations are
+**E1 Slice C → E3 Slice B → E3 Slice C**, followed by Wave 4
+**F2 → F1 → F3** (each with 3 slices). Wave 4 may be
+interleaved with Wave 3 (E4/E5/E6). Every slice is substantial;
+scoping each as its own iteration is the right move.
 
 ---
 
-## Slice 1 — E1 Slice B — `aaf-learn` crate and subscribers
+## ✓ Slice — E1 Slice B — `aaf-learn` crate and subscribers (LANDED)
+
+E1 Slice B delivered the `aaf-learn` crate with four subscriber
+modules: `FastPathMiner`, `CapabilityScorer`, `RouterTuner`,
+`EscalationTuner`. The `TraceSubscriber` trait was added to
+`aaf-trace::recorder`. The `RoutingPolicy` trait and
+`LearnedRoutingPolicy` were added to `aaf-llm::router`.
+`FastPathRuleSet::add_learned` was added to `aaf-planner::fast_path`.
+Integration test: `e1_slice_b_smoke.rs`. Rules 15–18 preserved.
+
+---
+
+## Slice 1 — E1 Slice C — CLI, semantic regression, governance
 
 ### Motivation
 
-E1 Slice A (iteration 4) delivered the feedback *shape*: every
-`Observation` now carries an optional `outcome_detail: Option<Outcome>`
-with status, latency, tokens, cost, policy violations, user
-feedback, downstream error, and semantic score. The runtime
-attaches a minimal outcome at step-end. `aaf-eval` has the
-`Judge` trait + `DeterministicJudge`, `GoldenSuite`, `Replayer`,
-and `RegressionReport`.
-
-What's missing: **nobody reads the outcomes back** and nothing
-adapts in response. Slice B closes the loop by adding a new
-`aaf-learn` crate with four subscriber modules and a
-non-blocking subscription contract on `aaf-trace`.
+E1 Slices A and B delivered the feedback shape (`Outcome` on every
+`Observation`) and the learning loop (`aaf-learn` subscribers that
+read outcomes and propose adaptations). What's missing is the
+**operational surface**: a CLI for managing learned rules, a CI
+target for semantic regression, and governance documentation for
+the learning pipeline.
 
 ### Scope
 
 | Area | What lands |
 |---|---|
-| **new crate `aaf-learn`** | Four modules: `fast_path_miner.rs`, `capability_scorer.rs`, `router_tuner.rs`, `escalation_tuner.rs`. Each implements a new `TraceSubscriber` trait defined in `aaf-trace::recorder`. Each writes back through a well-defined extension point so adaptations are *additive*, not invasive. |
-| **`aaf-trace::recorder` extensions** | `TraceSubscriber` trait with one method `on_observation(&self, obs: &Observation)`. `Recorder::with_subscriber(Arc<dyn TraceSubscriber>) -> Self` (builder). `Recorder::record_observation` fans out to every subscriber *after* writing to storage and *before* returning. Subscribers are called from a `tokio::spawn` so the hot path never waits (Rule 16). |
-| **`aaf-registry` extensions** | `Capability.reputation: f32` (default 0.5, clamped `[0, 1]`). `Capability.learned_rules: Vec<LearnedRuleRef>` (empty by default). New getter `Registry::update_reputation(cap_id, new_score)` gated by rate-limit (no more than one update per cap per minute — prevents adversarial oscillation). |
-| **`aaf-llm::router` extensions** | Existing `ValueRouter` gains a pluggable `RoutingPolicy` trait (`fn choose(&self, intent: &IntentEnvelope) -> ModelId`). New impl `LearnedRoutingPolicy` stores weights per `(intent_type, risk_tier, entity_class)` and is driven by `aaf-learn::router_tuner`. |
-| **`aaf-planner::fast_path` extensions** | `FastPathRuleSet::add_learned(rule, evidence)` accepts both hand-authored and learned rules. Learned rules are tagged with a `learned_rule_id` so policy packs can disable them wholesale. |
-| **new contracts** | `LearnedRule { id, source, evidence, approval_state, scope }`, `RoutingDecisionRecord { call_id, intent_type, risk_tier, model_chosen, cost_usd, quality_score, outcome }`, `ReputationUpdate { cap_id, old, new, evidence_ref }`. All live in `aaf-contracts::learn`. |
+| **`aaf learn` CLI subcommand** | `aaf-server learn list` (show proposals), `learn approve <id>`, `learn reject <id>`, `learn inspect <id>` (show evidence). Wired into `aaf-server::main.rs`. |
+| **`make test-semantic-regression`** | New Makefile target that loads a golden suite from `spec/examples/eval-suite-order-processing.yaml`, replays it, and fails if any case regresses beyond the configured threshold. |
+| **Governance docs** | `docs/learning-governance.md`: how learned rules are proposed, approved, and rolled back; the evidence requirements; the anomaly thresholds; the approval workflow. |
+| **Anomaly detection** | `FastPathMiner` gains `min_distinct_sessions` enforcement (adversarial traffic concentration). MinerConfig threshold tuning. |
 
 ### Files to touch
 
-- **New**
-  - `core/crates/aaf-learn/Cargo.toml`
-  - `core/crates/aaf-learn/src/lib.rs`
-  - `core/crates/aaf-learn/src/fast_path_miner.rs`
-  - `core/crates/aaf-learn/src/capability_scorer.rs`
-  - `core/crates/aaf-learn/src/router_tuner.rs`
-  - `core/crates/aaf-learn/src/escalation_tuner.rs`
-  - `core/crates/aaf-learn/src/error.rs`
-  - `core/crates/aaf-contracts/src/learn.rs` (then add `pub mod learn` + `pub use` in `lib.rs`)
 - **Edit**
-  - `Cargo.toml` (workspace members + deps)
-  - `core/crates/aaf-trace/src/recorder.rs` (subscriber hook)
-  - `core/crates/aaf-registry/src/store.rs` (reputation + learned_rules)
-  - `core/crates/aaf-llm/src/router.rs` (`RoutingPolicy` trait + `LearnedRoutingPolicy`)
-  - `core/crates/aaf-planner/src/fast_path.rs` (learned-rule tagging)
-  - `IMPLEMENTATION_PLAN.md` (new iteration section)
-  - `development/roadmap.md` (mark E1 Slice B ✓ when done)
+  - `core/crates/aaf-server/src/main.rs` (add `learn` subcommand dispatch)
+  - `core/crates/aaf-learn/src/fast_path_miner.rs` (anomaly thresholds)
+  - `Makefile` (new `test-semantic-regression` target)
+- **New**
+  - `docs/learning-governance.md`
+  - `core/tests/integration/tests/e1_slice_c_smoke.rs`
 
 ### Unit tests expected
 
-- `aaf-learn::fast_path_miner::tests` — at least 5:
-  - `mines_recurring_pattern_once_over_threshold`
-  - `rejects_adversarial_pattern_concentrated_in_few_sessions`
-  - `produces_proposed_rule_with_evidence`
-  - `honours_rate_limit`
-  - `policy_gate_rejects_unsafe_rule`
-- `aaf-learn::capability_scorer::tests` — at least 3:
-  - `successful_outcome_nudges_score_up`
-  - `failed_outcome_nudges_score_down`
-  - `bounded_in_0_1`
-- `aaf-learn::router_tuner::tests` — at least 3:
-  - `lower_cost_model_chosen_when_quality_equal`
-  - `higher_quality_model_chosen_on_higher_risk_tier`
-  - `weights_respect_rate_limit`
-- `aaf-learn::escalation_tuner::tests` — at least 2
-- `aaf-trace::recorder::tests::subscriber_is_not_on_hot_path` — fan-out test that asserts `record_observation` returns **before** the subscriber completes.
+- `aaf-server::learn::tests` — at least 3 (list, approve, reject)
+- `aaf-learn::fast_path_miner::tests` — at least 2 new (anomaly detection)
 
 ### Integration test
 
-- `core/tests/integration/tests/e1_slice_b_smoke.rs`:
-  - Set up a recorder with a fast-path miner subscriber.
-  - Run 20 agent-assisted intents with the same pattern.
-  - Assert the miner produced exactly one `LearnedRule` proposal.
-  - Assert the proposal is `ApprovalState::Proposed` (not yet live).
-  - Flip the proposal to `Approved` via the approval workflow.
-  - Run one more intent matching the pattern.
-  - Assert it hits the learned rule (verify via the trace).
+- `core/tests/integration/tests/e1_slice_c_smoke.rs`:
+  - Propose a learned rule via the miner.
+  - List proposals via CLI (assert the rule appears).
+  - Approve it.
+  - Verify the rule is live in the fast-path rule set.
+  - Reject a second rule; verify it does not activate.
 
 ### Rules preserved
 
 | Rule | How |
 |---|---|
-| R15 Feedback is a contract | Already satisfied by `Observation.outcome_detail`; Slice B adds readers, not writers of outcomes. |
-| R16 Learning never touches the hot path | `TraceSubscriber::on_observation` is spawned on `tokio::spawn`; the executor never awaits. |
-| R17 Every adaptation is reversible | Every reputation update, router weight change, and learned rule carries a `LearnedRuleRef` with `learned_by`, `learned_at`, `evidence`; the policy engine can roll each back by rule id. |
-| R18 Policy governs learning | Learned rule promotion goes through `ApprovalWorkflow`; never auto-promoted. |
+| R17 Every adaptation is reversible | CLI `reject` removes a learned rule; evidence ref preserved. |
+| R18 Policy governs learning | Approval workflow unchanged; CLI is a convenience, not a bypass. |
 
 ### Success criteria
 
-- `aaf-learn` compiles with `cargo build --workspace`.
-- `cargo test --workspace` grows by ≥ 15 tests (unit + integration).
+- `aaf-server learn list|approve|reject|inspect` works.
+- `make test-semantic-regression` exits 0 on a clean tree.
+- `docs/learning-governance.md` exists and is linked from `docs/README.md`.
 - `make ci` stays green.
-- The integration test demonstrates: observation → subscriber fans out → miner proposes rule → approval → rule goes live → subsequent intent hits it.
-- Every new public item has a `///` doc comment.
+- 475+ tests passing.
 
-### Deferred to E1 Slice C
+### Deferred after E1 Slice C
 
-- `aaf learn` CLI subcommand (list proposals, approve, reject, inspect evidence).
-- `make test-semantic-regression` Makefile target.
-- Governance docs under `docs/`.
-- Production-grade anomaly detection on evidence concentration.
+- Production-grade anomaly detection with sliding-window statistics.
+- `aaf-learn` Prometheus metrics subscriber.
 
 ---
 
@@ -229,115 +208,55 @@ class.
 
 ---
 
-## Slice 3 — X1 Slice C — CLI, Ed25519, federation co-sign, SPDX export
+## ✓ Slice — X1 Slice C — CLI, SPDX/CycloneDX export, co-signed tokens (LANDED)
+
+X1 Slice C delivered SBOM exporters (SPDX + CycloneDX), co-signed
+capability tokens for federation, identity CLI expansion, the
+`signed-agent` example, and ADR-017. Integration test:
+`x1_slice_c_cli.rs`. Rules 22–24 preserved.
+
+---
+
+## Slice 3 — E3 Slice C — SDK primitives, reference app, WebSocket
 
 ### Motivation
 
-X1 Slice A (iteration 6) delivered `aaf-identity` with DID,
-keystore, manifest, SBOM, attestation, capability token, and
-revocation registry — all with a deterministic HMAC-SHA256
-backend. X1 Slice B (iteration 9) wired runtime, trust, and
-registry gates. What's missing is **the CLI-facing polish**
-that moves the identity story from "contract foundation with
-hot-path gates" to "operationally deployable".
+E3 Slices A and B deliver the contracts and the runtime bridge.
+What's missing is **the developer-facing surface**: SDK primitives
+(`@on_event`, `@project`, `@accept_proposal`), a reference
+application under `examples/app-native/`, and a WebSocket
+proposal channel for real-time proposal delivery.
 
 ### Scope
 
 | Area | What lands |
 |---|---|
-| **Ed25519 backend swap** | New impl of `Keystore` / `Signer` / `Verifier` using `ed25519-dalek` (or a compatible MSRV-safe crate; the workspace's pinned Rust 1.70 is the constraint). Every call site in `aaf-identity`, `aaf-trust`, and `aaf-runtime` stays unchanged — the swap is trait-only. |
-| **Persistent keystore** | `PersistentKeystore` backed by a filesystem directory, one `did.json` per agent. Production deployments point it at their secret manager (HSM / KMS / SPIFFE) through a new `KeyStoreBackend` trait. |
-| **`aaf-server identity` CLI expansion** | Already landed in iteration 8 as a stub with `generate`, `revoke`, `sign-manifest`, `verify`, `export-sbom`. Slice C adds: `rotate <did>` (key rotation), `list` (enumerate known DIDs), `issue-token <did> <cap> <expires-at>` (mint a `CapabilityToken` on the CLI), `verify-token <token-json>`, `chain <did1> <did2>` (produce a cosigned delegation). |
-| **Federation co-signed tokens** | Already landed in `aaf-federation::cosign`. Slice C wires them into `Router::enforce_capability` so a cross-cell call is rejected unless both cells have signed. |
-| **SPDX / CycloneDX export** | Already landed (iteration 8 linter-added). Slice C adds round-trip tests and a schema validation (`spec/schemas/cyclonedx.schema.json`). |
-| **ADR** | `docs/adr/ADR-018-ed25519-swap-strategy.md` documenting why the swap is trait-only and how the migration works in rolling upgrade scenarios. |
+| **Python SDK primitives** | `@on_event`, `@project`, `@accept_proposal` decorators in the Python SDK. |
+| **TypeScript SDK primitives** | Mirror of the Python decorators. |
+| **`<AgentProposal/>` React component** | In `ui/front-door/` — renders `ActionProposal`s inline. |
+| **Reference application** | `examples/app-native/` — user opens an Order page → `AppEvent` → `Intent` → planner → runtime → `ActionProposal` rendered inline → user accepts → saga executes. |
+| **WebSocket proposal channel** | Real-time delivery of proposals from runtime to front door. |
 
 ### Files to touch
 
 - **New**
-  - `core/crates/aaf-identity/src/keystore/ed25519.rs` (or a
-    sub-module `ed25519_backend.rs`)
-  - `core/crates/aaf-identity/src/keystore/persistent.rs`
-  - `docs/adr/ADR-018-ed25519-swap-strategy.md`
+  - `sdk/python/src/aaf/decorators.py` (surface decorators)
+  - `sdk/typescript/src/decorators.ts` (surface decorators)
+  - `ui/front-door/src/components/AgentProposal.tsx`
+  - `examples/app-native/` (full reference app)
 - **Edit**
-  - `core/crates/aaf-identity/src/keystore.rs` (extend trait shape)
-  - `core/crates/aaf-identity/Cargo.toml` (add `ed25519-dalek` dep,
-    feature-gated)
-  - `core/crates/aaf-server/src/identity.rs` (new subcommands)
-  - `core/crates/aaf-federation/src/lib.rs` (cosign wiring into
-    `Router::enforce_capability`)
-
-### Dependency caveat
-
-The workspace is pinned to **Rust 1.70** (see
-`development/build-and-ci.md`). `ed25519-dalek` post-1.0
-requires newer `curve25519` versions that do *not* always
-compile on 1.70. Two options:
-
-1. **Pin `ed25519-dalek = "1.0"`** (last known 1.70-compatible
-   release) and accept the API constraints.
-2. **Feature-gate `ed25519`** behind a `--features ed25519` flag
-   so the default build stays on HMAC. This is the
-   lowest-risk path — the HMAC backend stays the default, and
-   production deployments opt into Ed25519 by compiling with the
-   feature.
-
-The Slice C iteration entry in `IMPLEMENTATION_PLAN.md` **must**
-document which option was chosen and why.
-
-### Unit tests expected
-
-- `aaf-identity::keystore::ed25519::tests` — at least 5:
-  - `sign_verify_round_trip`
-  - `tampered_message_fails_verify`
-  - `wrong_key_fails_verify`
-  - `key_rotation_preserves_did`
-  - `cross_backend_interop` (sign with HMAC, verify with
-    Ed25519 — should fail cleanly, not panic)
-- `aaf-identity::keystore::persistent::tests` — at least 3:
-  - `round_trip_through_directory`
-  - `refuses_world_readable_private_key_file`
-  - `list_enumerates_every_known_did`
-- `aaf-server::identity::tests` — add coverage for the new
-  subcommands.
-
-### Integration test
-
-- `core/tests/integration/tests/x1_slice_c_smoke.rs`:
-  - Generate a DID, sign a manifest, export its SBOM as CycloneDX.
-  - Validate the CycloneDX JSON against the shipped schema.
-  - Issue a capability token on the CLI, verify it on the CLI.
-  - Rotate the keystore, verify that tokens signed by the old
-    key now fail verification.
-  - Wire two `aaf-federation::Router`s; have cell A mint and sign
-    a token, cell B cosign it, have `Router::enforce_capability`
-    accept a cap that carries the cosigned token.
-
-### Rules preserved
-
-| Rule | How |
-|---|---|
-| R22 Identity is cryptographic | Ed25519 is the *real* cryptographic backend; HMAC remains as a fallback for tests and the feature-gated default. |
-| R23 Signed manifest | `AgentManifest::build` continues to sign at build time, now through Ed25519 when enabled. |
-| R24 Provenance as BOM | SPDX / CycloneDX are the external formats. |
+  - `core/crates/aaf-server/src/api/ws.rs` (proposal channel)
 
 ### Success criteria
 
-- `ed25519` feature compiles cleanly on Rust 1.70 (or the
-  feature is documented as "requires Rust 1.78+"; either is
-  acceptable if the ADR says so).
-- `aaf-server identity` CLI has all planned subcommands.
-- Integration test demonstrates: generate → sign → export SBOM
-  (validated against schema) → issue token → cosign cross-cell →
-  verify in cell B → rotate → previous-token verification
-  fails.
+- Reference app runs end-to-end: event → intent → plan → proposal → accept → saga → outcome.
+- Python and TypeScript decorators compile and have tests.
 - `make ci` stays green.
 
-### Deferred after X1 Slice C
+### Deferred after E3 Slice C
 
-- Real HSM / KMS / SPIFFE backends (one per target platform).
-- ACME-style DID discovery.
-- `aaf-server identity watch` for revocation streaming.
+- Go SDK primitives.
+- Dashboard integration for proposal analytics.
 
 ---
 
@@ -371,3 +290,87 @@ The only exception is **fix-forward** iterations — if the tree
 is broken, fix the tree before adding any new slice. Iteration
 5 was exactly this (fix-forward + quality pass) and is the
 template to follow.
+
+---
+
+## Wave 4 Slices (after E1 C / E3 B / E3 C)
+
+> See `PROJECT.md` §20, `CLAUDE.md` rules 34–38, and
+> `development/roadmap.md` for the full design.
+
+### F2 Slice A — Anthropic Provider + ProviderMetrics
+
+**Scope:**
+- `ProviderMetrics` struct on `ChatResponse` (Rule 35)
+- `AnthropicProvider` with `from_env()` + `chat()` — Messages API
+  format mapping, rate limit handling, real token counting
+- `ModelProfile` + `default_model_catalog()` pricing table
+- Update `MockProvider` to return `ProviderMetrics`
+- Guarded live test behind `AAF_LIVE_LLM_TEST=1` env var
+
+**Files to touch:**
+- Edit: `core/crates/aaf-llm/src/provider.rs`, `Cargo.toml`
+- New: `core/crates/aaf-llm/src/anthropic.rs`, `pricing.rs`,
+  `core/tests/integration/tests/f2_llm_provider_smoke.rs`
+
+### F2 Slice B — Router + Multi-Provider + Fallback
+
+**Scope:**
+- `OpenAiProvider` + `LocalProvider`
+- `ValueRouter` with scoring algorithm + `RoutingConstraints`
+- Health tracking (latency moving average, failure count)
+- Auto-fallback on provider failure
+- Wire router into `aaf-runtime` executor
+
+### F2 Slice C — Streaming + Budget Pre-Check
+
+**Scope:**
+- `chat_stream()` with SSE parsing (Anthropic + OpenAI)
+- Budget pre-check: estimate cost, reject if over budget
+- Provider configuration from `aaf-server` config file
+- Classification-aware provider filtering
+
+### F1 Slice A — Python SDK Core
+
+**Scope:**
+- `scripts/codegen/generate.py` — JSON Schema → pydantic v2
+- `sdk/python/` — `@capability`, `@guard`, `@compensation`
+  decorators, `AafClient`, `MockRuntime`
+- Generated pydantic models for all 18+ JSON Schemas
+- `Makefile` — `codegen` target
+
+### F1 Slice B — TypeScript SDK + CLI
+
+**Scope:**
+- `scripts/codegen/typescript_generator.py` — JSON Schema → zod
+- `sdk/typescript/` — builders, client, streaming, testing
+- `aaf` CLI commands: init, dev, test, run, trace
+
+### F1 Slice C — Go SDK + Advanced Builders
+
+**Scope:**
+- `sdk/go/` — client, sidecar builder, wrapper builder
+- End-to-end example: Python agent → sidecar → runtime → trace
+- SDK getting-started guides in `docs/`
+
+### F3 Slice A — MCP Client
+
+**Scope:**
+- `adapters/mcp/` Rust crate — stdio transport, `McpClient`,
+  tool discovery → capability registration, governed invocation
+- `spec/schemas/mcp-server-config.schema.json`
+
+### F3 Slice B — MCP Server + Remote Transports
+
+**Scope:**
+- SSE + streamable HTTP transports
+- `McpServer` exposing AAF capabilities as MCP tools
+- Wire MCP server into `aaf-server` (config-gated)
+
+### F3 Slice C — A2A Participant + ProtocolBridge
+
+**Scope:**
+- `adapters/a2a/` Rust crate — Agent Card, task lifecycle,
+  DID-based trust propagation, SSE streaming
+- `ProtocolBridge` unifier (local + MCP + A2A)
+- Wire A2A into `aaf-server` (config-gated)

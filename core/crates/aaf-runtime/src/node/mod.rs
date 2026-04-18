@@ -14,7 +14,7 @@ pub mod deterministic;
 pub mod event_wait;
 pub mod fork;
 
-pub use agent::AgentNode;
+pub use agent::{AgentNode, ToolCallRecord, ToolExecutor, DEFAULT_MAX_TOOL_CALLS};
 pub use approval::ApprovalNode;
 pub use deterministic::DeterministicNode;
 pub use event_wait::EventWaitNode;

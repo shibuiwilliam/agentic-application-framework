@@ -1,6 +1,6 @@
 # Examples Walkthrough
 
-> How to run, read, and extend the 8 runnable examples.
+> How to run, read, and extend the 13 runnable examples.
 
 Each example lives under `examples/<name>/` and has an `aaf.yaml`
 configuration plus a `README.md`. Every example (except `hello-agent`
@@ -24,6 +24,11 @@ order:
 | 6 | `app-native-surface` | Events → proposals → lifecycle, projections (Rules 19/20) | 23 |
 | 7 | `cross-cell-federation` | Cell routing, data boundaries, co-signed tokens | 7 |
 | 8 | `signed-agent` | Cryptographic identity, manifests, SBOM, revocation | (run via `aaf-server`) |
+| 9 | `eval-golden` | Golden suite loading, judge scoring, regression reports (E1) | (via integration test) |
+| 10 | `agentic-tool-loop` | Multi-turn tool calling, bounded agentic loop (E4) | (via `e4_tool_loop_smoke`) |
+| 11 | `parallel-orchestration` | ForkNode, diamond DAG, parallel execution, compensation | (via `parallel_orchestration_e2e`) |
+| 12 | `sidecar-gateway` | Sidecar proxy, Rule 13 transparent fallback, ACL, guards | (via `sidecar_gateway_e2e`) |
+| 13 | `governed-invocation` | Capability invocation bridge, GoverningToolExecutor, InProcessInvoker | (via `governed_invocation_e2e`) |
 
 ---
 
@@ -49,33 +54,35 @@ cargo test -p aaf-integration-tests --test feedback_loop_e2e
 cargo test -p aaf-integration-tests --test memory_context_e2e
 cargo test -p aaf-integration-tests --test app_native_surface_e2e
 cargo test -p aaf-integration-tests --test cross_cell_federation_e2e
+cargo test -p aaf-integration-tests --test eval_golden_e2e
 ```
 
 ---
 
 ## Architecture rules exercised by each example
 
-| Rule | hello | saga | resilient | feedback | memory | surface | federation | signed |
-|---|---|---|---|---|---|---|---|---|
-| R1 Agents translate | | | | | | | | |
-| R4 Fast path first | | | x | | | | | |
-| R5 Deterministic sacred | | x | | | | | | |
-| R6 Policy at every step | | x | x | | | | | |
-| R7 Guard every agent | | | x | | | | | |
-| R8 Budget limits | | | x | | | | | |
-| R9 Compensation first | | x | | | | | | |
-| R10 Context minimization | | | | | x | | | |
-| R11 Storage behind traits | | | | | x | | | |
-| R12 Trace everything | x | x | x | | | | | |
-| R14 Semantics are nouns | | | | | x | | | |
-| R16 Learning off hot path | | | | x | | | | |
-| R18 Policy governs learning | | | | x | | | | |
-| R19 Projections default-deny | | | | | | x | | |
-| R20 Proposals not mutations | | | | | | x | | |
-| R21 Entities tenant-scoped | | | | | x | | x | |
-| R22 Identity cryptographic | | | | | | | x | x |
-| R23 Signed manifest | | | | | | | | x |
-| R24 Provenance as BOM | | | | | | | | x |
+| Rule | hello | saga | resilient | feedback | memory | surface | federation | signed | eval |
+|---|---|---|---|---|---|---|---|---|---|
+| R1 Agents translate | | | | | | | | | |
+| R4 Fast path first | | | x | | | | | | |
+| R5 Deterministic sacred | | x | | | | | | | |
+| R6 Policy at every step | | x | x | | | | | | |
+| R7 Guard every agent | | | x | | | | | | |
+| R8 Budget limits | | | x | | | | | | |
+| R9 Compensation first | | x | | | | | | | |
+| R10 Context minimization | | | | | x | | | | |
+| R11 Storage behind traits | | | | | x | | | | |
+| R12 Trace everything | x | x | x | | | | | | x |
+| R14 Semantics are nouns | | | | | x | | | | |
+| R15 Feedback is a contract | | | | x | | | | | x |
+| R16 Learning off hot path | | | | x | | | | | |
+| R18 Policy governs learning | | | | x | | | | | |
+| R19 Projections default-deny | | | | | | x | | | |
+| R20 Proposals not mutations | | | | | | x | | | |
+| R21 Entities tenant-scoped | | | | | x | | x | | |
+| R22 Identity cryptographic | | | | | | | x | x | |
+| R23 Signed manifest | | | | | | | | x | |
+| R24 Provenance as BOM | | | | | | | | x | |
 
 ---
 

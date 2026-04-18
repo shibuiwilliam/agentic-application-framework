@@ -1,0 +1,24 @@
+project:
+  name: agentic-tool-loop
+  version: 0.2.0
+
+budget:
+  max_tokens: 10000
+  max_cost_usd: 1.00
+  max_latency_ms: 30000
+
+capabilities:
+  - id: cap-stock-lookup
+    name: stock lookup
+    description: look up current stock level for a product SKU in the warehouse
+    domains: [warehouse]
+    side_effect: read
+    required_scope: stock:read
+    deterministic: false
+
+demo:
+  goal: show stock report for SKU-42
+  domain: warehouse
+  role: operator
+  scopes:
+    - stock:read

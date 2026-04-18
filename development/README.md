@@ -19,9 +19,10 @@ If you are a Claude Code session and you have not touched this tree
 before, open these files in this order. You do not need to read any
 other file in the repository to be productive.
 
-1. **`CLAUDE.md`** (repo root) — the 24 architecture rules (13
-   foundation + 11 enhancement). Non-negotiable. Every code change
-   must conform.
+1. **`CLAUDE.md`** (repo root) — the 43 architecture rules (13
+   foundation + 11 enhancement + 5 Wave 4 infrastructure + 5 Three
+   Pillars + 9 service integration). Non-negotiable. Every code
+   change must conform.
 2. **`development/architecture-overview.md`** — crate map, dependency
    graph, hot path, where contracts live, where enforcement lives.
 3. **`development/crate-reference.md`** — one page per crate: what it
@@ -35,7 +36,7 @@ other file in the repository to be productive.
    planning and landing a new Slice. Every iteration in
    `IMPLEMENTATION_PLAN.md` followed this recipe.
 7. **`development/next-slices.md`** — the concrete playbook for the
-   next three upcoming slices (E1 B, E3 B, X1 C). **Start here when
+   next upcoming slices (E1 C, E3 B, E3 C). **Start here when
    you are about to pick up real work.**
 8. **`development/known-gotchas.md`** — the things that bit previous
    iterations. **Read this before you pick a task.**
@@ -63,13 +64,18 @@ The other files in this directory are references you load on demand:
 - **`development/glossary.md`** — AAF terminology in alphabetical
   order. Load when you don't recognise a term.
 - **`development/examples-walkthrough.md`** — how to run, read, and
-  extend the 8 runnable examples. Includes code patterns and rule
+  extend the 13 runnable examples. Includes code patterns and rule
   coverage matrix.
 - **`development/error-handling.md`** — error taxonomy by crate,
   propagation patterns, how to add a new error variant.
 - **`development/capability-authoring.md`** — how to define, register,
   and test new capabilities. Naming conventions, compensation, entity
   declarations, fast-path rules, degradation levels.
+- **`development/learning-pipeline.md`** — how the feedback spine
+  works end-to-end: `aaf-eval` (Judge, GoldenSuite, Replayer) and
+  `aaf-learn` (FastPathMiner, CapabilityScorer, RouterTuner,
+  EscalationTuner). Load when you are working on the learning loop
+  or evaluation harness.
 
 Enhancement designs (E1/E2/E3/X1) are merged into `PROJECT.md`
 §§16–18 and `CLAUDE.md` (rules 14–24). Service architecture
@@ -82,33 +88,38 @@ removed.
 
 ## What this repository is
 
-AAF is a **Rust workspace of 22 crates** implementing the core control
-plane of an Intent-first Application Architecture platform. The
-architecture is laid out in `PROJECT.md` §§1–18 and enforced by the
-24 rules in `CLAUDE.md` (13 foundation + 11 enhancement). Iterations
-1–10 built the Wave-1 foundation (E1/E2/E3) and Wave-2 identity (X1).
+AAF is a **Rust workspace of 22 crates** (including `aaf-learn`)
+implementing the core control plane of an Intent-first Application
+Architecture platform. The architecture is laid out in `PROJECT.md`
+§§1–20 and enforced by the 43 rules in `CLAUDE.md` (13 foundation +
+11 enhancement + 5 Wave 4 infrastructure + 5 Three Pillars + 9
+service integration).
+Iterations 1–10+ built the Wave-1 foundation (E1/E2/E3) and Wave-2
+identity (X1). Wave 4 (F1/F2/F3) adds developer SDKs, live LLM
+providers, and protocol bridges — the critical infrastructure for
+framework adoption.
 
-Enhancement rules 14–24 and the slicing strategy are now merged into
-`CLAUDE.md`. Enhancement designs are merged into `PROJECT.md` §§16–18.
-The former `PROJECT_ENHANCE.md` and `CLAUDE_ENHANCE.md` have been
-merged into these files and removed.
+Enhancement rules 14–24, Wave 4 rules 34–38, and the slicing strategy
+are now merged into `CLAUDE.md`. Enhancement designs are merged into
+`PROJECT.md` §§16–20. The former `PROJECT_ENHANCE.md` and
+`CLAUDE_ENHANCE.md` have been merged into these files and removed.
 
 Current state at the time of this writing:
 
 | Metric | Value |
 |---|---|
 | Crates in the workspace | **22** |
-| Rust lines (`core/crates/**/src/*.rs`) | **≈29,000** |
-| Tests passing | **463** |
+| Rust lines (`core/crates/**/src/*.rs`) | **≈26,000** |
+| Tests passing | **554** |
 | Test failures | **0** |
 | Build warnings | **0** |
 | Clippy warnings (`-W clippy::all`) | **0** |
 | JSON schemas | **18** |
-| Example configs | **11** (9 validate against their schema) |
+| Example configs | **11** (all validate against their schema) |
 | Ontology lint | **strict mode, 0 errors** |
 | ADRs | **2** (ADR-008, ADR-017) |
-| CLI subcommands | **12** |
-| Runnable examples | **8** |
+| CLI subcommands | **13** |
+| Runnable examples | **13** |
 
 ---
 
@@ -207,6 +218,9 @@ Abbreviations used throughout these docs:
 - **X1 / X2 / X3** — Wave-2 enhancements: X1 = Agent Identity /
   Provenance / Supply Chain, X2 = Semantic Knowledge Fabric, X3 =
   Developer Experience Surface.
+- **F1 / F2 / F3** — Wave-4 critical infrastructure: F1 = Developer
+  Experience Platform (SDKs + CLI), F2 = Live LLM Integration &
+  Intelligent Model Routing, F3 = Universal Protocol Bridge (MCP + A2A).
 - **Slice A / B / C** — every enhancement lands in three slices:
   A = contracts + skeleton + unit tests, B = integration into hot
   crates, C = SDK primitives / examples / polish.

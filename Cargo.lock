@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "aaf-contracts"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "serde",
@@ -15,7 +15,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-eval"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-trace",
@@ -30,7 +30,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-federation"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-identity",
@@ -47,7 +47,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-identity"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "async-trait",
@@ -64,7 +64,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-integration-tests"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-eval",
@@ -80,6 +80,7 @@ dependencies = [
  "aaf-registry",
  "aaf-runtime",
  "aaf-saga",
+ "aaf-sidecar",
  "aaf-storage",
  "aaf-surface",
  "aaf-trace",
@@ -94,7 +95,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-intent"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-memory",
@@ -111,7 +112,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-learn"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-trace",
@@ -123,7 +124,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-llm"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "async-trait",
@@ -137,7 +138,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-memory"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-storage",
@@ -150,7 +151,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-ontology"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "async-trait",
@@ -164,7 +165,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-planner"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-intent",
@@ -183,7 +184,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-policy"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "chrono",
@@ -197,7 +198,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-registry"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-storage",
@@ -213,13 +214,14 @@ dependencies = [
 
 [[package]]
 name = "aaf-runtime"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-identity",
  "aaf-llm",
  "aaf-memory",
  "aaf-policy",
+ "aaf-registry",
  "aaf-storage",
  "aaf-trace",
  "aaf-trust",
@@ -234,7 +236,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-saga"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-registry",
@@ -250,7 +252,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-server"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-federation",
@@ -270,6 +272,7 @@ dependencies = [
  "aaf-transport",
  "aaf-trust",
  "aaf-wrapper",
+ "async-trait",
  "chrono",
  "serde",
  "serde_json",
@@ -280,7 +283,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-sidecar"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-planner",
@@ -298,7 +301,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-storage"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "async-trait",
@@ -312,7 +315,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-surface"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "async-trait",
@@ -326,7 +329,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-trace"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-storage",
@@ -341,7 +344,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-transport"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "async-trait",
@@ -354,7 +357,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-trust"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-identity",
@@ -369,7 +372,7 @@ dependencies = [
 
 [[package]]
 name = "aaf-wrapper"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aaf-contracts",
  "aaf-policy",

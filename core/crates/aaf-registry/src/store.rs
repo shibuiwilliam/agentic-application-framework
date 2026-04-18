@@ -90,6 +90,17 @@ impl Registry {
         Ok(self.store.list().await?)
     }
 
+    /// Find a capability by its display name.
+    ///
+    /// Scans the registry for the first capability whose `name` field
+    /// matches. Returns `RegistryError::NotFound` if no match exists.
+    pub async fn find_by_name(&self, name: &str) -> Result<CapabilityContract, RegistryError> {
+        let all = self.store.list().await?;
+        all.into_iter()
+            .find(|c| c.name == name)
+            .ok_or_else(|| RegistryError::NotFound(name.to_string()))
+    }
+
     /// Update the reputation score for a capability, clamping to
     /// `[0.0, 1.0]`. Rate-limited to one update per capability per
     /// 60 seconds to prevent adversarial oscillation (E1 §2.8).

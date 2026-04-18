@@ -30,11 +30,56 @@ use aaf_intent::{compiler::CompileOutcome, IntentCompiler};
 use aaf_planner::{BoundedAutonomy, CompositionChecker, RegistryPlanner};
 use aaf_policy::PolicyEngine;
 use aaf_registry::{DiscoveryQuery, Registry};
-use aaf_runtime::node::DeterministicNode;
+use aaf_runtime::node::{AgentNode, DeterministicNode};
 use aaf_runtime::{ExecutionOutcome, GraphBuilder, GraphExecutor, Node};
 use aaf_trace::{Recorder, TraceRecorder};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+/// Build the GoverningToolExecutor for the demo pipeline.
+///
+/// Registers in-process demo handlers for every capability in the
+/// registry. Each handler returns a realistic-looking JSON response.
+/// In production, these are replaced by endpoint-driven invokers
+/// (HTTP, gRPC, MCP, A2A).
+async fn build_demo_executor(
+    registry: &std::sync::Arc<aaf_registry::Registry>,
+) -> std::sync::Arc<dyn aaf_runtime::ToolExecutor> {
+    let invoker = std::sync::Arc::new(aaf_runtime::InProcessInvoker::new());
+
+    // Register a demo handler for every known capability.
+    if let Ok(caps) = registry.list().await {
+        for cap in &caps {
+            let name = cap.name.clone();
+            invoker.register(
+                &cap.name,
+                std::sync::Arc::new(move |input| {
+                    Ok(serde_json::json!({
+                        "service": name,
+                        "status": "ok",
+                        "input_received": input,
+                    }))
+                }),
+            );
+        }
+    }
+
+    std::sync::Arc::new(aaf_runtime::GoverningToolExecutor::new(
+        invoker,
+        registry.clone(),
+    ))
+}
+
+fn parse_side_effect(s: &str) -> SideEffect {
+    match s {
+        "none" => SideEffect::None,
+        "write" => SideEffect::Write,
+        "delete" => SideEffect::Delete,
+        "send" => SideEffect::Send,
+        "payment" => SideEffect::Payment,
+        _ => SideEffect::Read,
+    }
+}
 
 fn seed_to_capability(seed: &CapabilitySeed) -> CapabilityContract {
     CapabilityContract {
@@ -50,11 +95,17 @@ fn seed_to_capability(seed: &CapabilitySeed) -> CapabilityContract {
         },
         input_schema: serde_json::json!({}),
         output_schema: serde_json::json!({}),
-        side_effect: SideEffect::Read,
+        side_effect: parse_side_effect(&seed.side_effect),
         idempotent: true,
         reversible: true,
-        deterministic: true,
-        compensation: None,
+        deterministic: seed.deterministic,
+        compensation: if parse_side_effect(&seed.side_effect).requires_compensation() {
+            Some(aaf_contracts::capability::CompensationSpec {
+                endpoint: format!("{}-compensate", seed.id),
+            })
+        } else {
+            None
+        },
         sla: CapabilitySla::default(),
         cost: CapabilityCost::default(),
         required_scope: seed.required_scope.clone(),
@@ -92,6 +143,8 @@ async fn seed_registry(cfg: &ServerConfig) -> Result<Arc<Registry>, Box<dyn std:
             description: "monthly sales report grouped by region".into(),
             domains: vec!["sales".into()],
             required_scope: "sales:read".into(),
+            side_effect: "read".into(),
+            deterministic: true,
         }]
     } else {
         cfg.capabilities.clone()
@@ -351,15 +404,38 @@ async fn cmd_run(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     // ── Materialise + execute ────────────────────────────────────────
     let policy = Arc::new(PolicyEngine::with_default_rules());
     let recorder: Arc<dyn TraceRecorder> = Arc::new(Recorder::in_memory());
+    let mock_provider: Arc<dyn aaf_llm::LLMProvider> =
+        Arc::new(aaf_llm::MockProvider::new("mock", 0.001));
+    let tool_executor = build_demo_executor(&registry).await;
     let mut builder = GraphBuilder::new();
     let mut prev: Option<NodeId> = None;
     for step in &plan.steps {
         let node_id = NodeId::from(step.capability.as_str());
-        let node: Arc<dyn Node> = Arc::new(DeterministicNode::new(
-            node_id.clone(),
-            SideEffect::Read,
-            Arc::new(move |_, _| Ok(serde_json::json!({"rows": 47}))),
-        ));
+        let node: Arc<dyn Node> = if step.kind == aaf_planner::PlannedStepKind::Agent {
+            // Look up capability from registry and convert to tools.
+            let tools: Vec<aaf_contracts::ToolDefinition> =
+                if let Ok(cap) = registry.get(&step.capability).await {
+                    vec![aaf_contracts::ToolDefinition::from(&cap)]
+                } else {
+                    vec![]
+                };
+            Arc::new(
+                AgentNode::new(
+                    node_id.clone(),
+                    mock_provider.clone(),
+                    "You are an AAF agent. Use the tools provided to accomplish the goal.",
+                    "mock-model",
+                    1024,
+                )
+                .with_tools(tools, tool_executor.clone()),
+            )
+        } else {
+            Arc::new(DeterministicNode::new(
+                node_id.clone(),
+                SideEffect::Read,
+                Arc::new(move |_, _| Ok(serde_json::json!({"rows": 47}))),
+            ))
+        };
         builder = builder.add_node(node);
         if let Some(p) = prev.take() {
             builder = builder.add_edge(p, node_id.clone());

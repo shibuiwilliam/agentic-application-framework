@@ -37,7 +37,7 @@ Verify the tree is green:
 cargo test --workspace
 ```
 
-You should see **463 tests passing, 0 failures**. If any fail,
+You should see **554 tests passing, 0 failures**. If any fail,
 stop and open an issue — the tree is supposed to be green at
 every committed state.
 
@@ -81,9 +81,9 @@ See [deployment.md](deployment.md) for non-demo deployment options.
 
 ---
 
-## Run the 8 runnable examples
+## Run the 9 runnable examples
 
-AAF ships 8 examples that progressively demonstrate deeper framework
+AAF ships 9 examples that progressively demonstrate deeper framework
 features. Each lives under `examples/<name>/` with an `aaf.yaml` and
 a `README.md`:
 
@@ -111,6 +111,9 @@ cargo test -p aaf-integration-tests --test cross_cell_federation_e2e
 
 # 8. Cryptographic identity + SBOM
 cargo run -p aaf-server -- identity verify examples/signed-agent/manifest.yaml
+
+# 9. Golden suite evaluation + regression reports (E1)
+cargo test -p aaf-integration-tests --test eval_golden_e2e
 ```
 
 See `examples/README.md` for the full list with feature coverage and
@@ -251,4 +254,8 @@ for the complete CI reference.
 - [contracts.md](contracts.md) — the typed surface.
 - [integration-microservices.md](integration-microservices.md) —
   if you plan to drop AAF alongside existing services.
+- [enhancements/f2-llm-integration.md](enhancements/f2-llm-integration.md) —
+  live LLM provider design (Wave 4).
+- [enhancements/f1-developer-experience.md](enhancements/f1-developer-experience.md) —
+  SDK and CLI design (Wave 4).
 - `../development/README.md` — if you plan to extend the core.

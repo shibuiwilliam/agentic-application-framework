@@ -1,0 +1,41 @@
+project:
+  name: eval-golden
+  version: 0.2.0
+
+budget:
+  max_tokens: 5000
+  max_cost_usd: 1.00
+  max_latency_ms: 30000
+
+capabilities:
+  - id: cap-order-place
+    name: place order
+    description: create a new order for the given SKU
+    domains: [ecommerce]
+    side_effect: write
+    required_scope: order:write
+  - id: cap-stock-query
+    name: stock query
+    description: return current stock level for a given SKU
+    domains: [ecommerce]
+    side_effect: read
+    required_scope: inventory:read
+  - id: cap-order-cancel
+    name: cancel order
+    description: cancel an existing order by id
+    domains: [ecommerce]
+    side_effect: write
+    required_scope: order:write
+  - id: cap-sales-report
+    name: sales report
+    description: generate a sales report by region for a time period
+    domains: [analytics]
+    side_effect: read
+    required_scope: analytics:read
+
+eval:
+  golden_suite: golden-suite.yaml
+  judge: deterministic-jaccard
+  replay:
+    cost_tolerance_usd: 0.001
+    latency_tolerance_ms: 100

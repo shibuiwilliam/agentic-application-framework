@@ -229,15 +229,16 @@ a separate counter registry.
 
 If you want to expose Prometheus metrics, the hook is:
 
-1. Subscribe to every `record_observation` via the (deferred)
-   `TraceSubscriber` trait that E1 Slice B will add.
+1. Subscribe to every `record_observation` via the
+   `TraceSubscriber` trait (landed in E1 Slice B).
 2. Increment counters and histograms in your subscriber.
 3. Expose them through a `prometheus` crate-backed `/metrics`
    endpoint.
 
-Slice B of E1 will also wire an `aaf-learn` subscriber that
-listens on the same hook, so adding Prometheus is ~50 lines on
-top of the subscriber contract.
+`aaf-learn` already uses `TraceSubscriber` with four subscribers
+(fast-path miner, capability scorer, router tuner, escalation
+tuner), so adding Prometheus is ~50 lines on top of the existing
+subscriber contract.
 
 ---
 
@@ -274,7 +275,8 @@ step's `semantic_score` field.
 None of this modifies the hot path — the feedback spine reads
 `outcome_detail` out-of-band, aggregates, and writes back
 through the registry / router / fast-path-miner extension
-points that E1 Slice B will add.
+points added by E1 Slice B (`aaf-learn` subscribers). See
+`development/learning-pipeline.md` for the full picture.
 
 ---
 

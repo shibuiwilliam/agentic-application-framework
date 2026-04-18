@@ -27,6 +27,11 @@ AAF combines the qualities of a UI framework, Integration Platform, Workflow Eng
 13. [Go-to-Market Strategy](#13-go-to-market-strategy)
 14. [Roadmap](#14-roadmap)
 15. [Appendix: Glossary and Reference Architecture](#15-appendix)
+16. [Enhancements (Wave 1)](#16-enhancements-wave-1)
+17. [Enhancements (Wave 2)](#17-enhancements-wave-2)
+18. [Enhancement Implementation Strategy](#18-enhancement-implementation-strategy)
+19. [Service Architecture Integration Design](#19-service-architecture-integration-design)
+20. [Enhancements (Wave 4) — Critical Infrastructure](#20-enhancements-wave-4--critical-infrastructure)
 
 ---
 
@@ -1887,7 +1892,7 @@ Each enhancement is split into three ordered slices (A -> B -> C). A slice is th
 2. Keeps `cargo test --workspace` green
 3. Does not require rework in later slices
 
-**Work order:** E2 -> E1 -> E3 (Wave 1), then X1 -> X2 -> X3 (Wave 2).
+**Work order:** E2 -> E1 -> E3 (Wave 1), then X1 -> X2 -> X3 (Wave 2), then F2 -> F1 -> F3 (Wave 4).
 
 ### 18.2 Current Status
 
@@ -1899,6 +1904,9 @@ Each enhancement is split into three ordered slices (A -> B -> C). A slice is th
 | X1 Agent Identity | Complete (iter 6) | Complete (iter 9) | Complete (iter 10) |
 | X2 Knowledge Fabric | — | — | — |
 | X3 DX Surface | — | — | — |
+| F1 Developer Experience | — | — | — |
+| F2 Live LLM Integration | — | — | — |
+| F3 Protocol Bridges | — | — | — |
 
 ---
 
@@ -3564,4 +3572,287 @@ Items to verify when integrating a new service into AAF.
 
 ---
 
-*This design document is the Agentic Application Framework's service-architecture integration guide and will be updated continuously as implementation progresses.*
+---
+
+<!-- Wave 4 content (originally from PROJECT_ENHANCE.md, now consolidated) -->
+
+## 20. Enhancements (Wave 4) — Critical Infrastructure
+
+Three foundational additions that transform AAF from an **internal Rust prototype** into a **production-grade, developer-adoptable agentic application framework**.
+
+> Wave 3 (E4/E5/E6) correctly identifies that AAF's agents are not yet agents. This proposal addresses an even more fundamental gap: **nobody can use AAF yet** — there are no SDKs, no real LLM providers, and no protocol bridges to connect agents to the real world.
+
+### 20.0 Executive Summary
+
+AAF's Rust core (v0.2.0, ~26,000 lines of Rust, 554 tests, 13 examples) is the most disciplined agent orchestration substrate available: typed contracts, policy-at-every-step, compensation chains, budget enforcement, cryptographic identity, entity-aware ontology, and full observability. After Waves 1-3, the governance story is comprehensive.
+
+**Pillar 1 Slice A (Anthropic provider) and Pillar 2 Slice A (capability invocation) have landed.** The `AnthropicProvider` in `aaf-llm/src/anthropic.rs` gives AAF a real brain — requests are mapped to the Anthropic Messages API with retry, backoff, and budget enforcement. `ModelPricing` in `aaf-llm/src/pricing.rs` provides per-call cost tracking. The `GoverningToolExecutor`, `InProcessInvoker`, and `ServiceInvoker` in `aaf-runtime/src/invoke.rs` give AAF real hands — the runtime can now dispatch capability invocations through the policy engine to actual service endpoints. A `governed-invocation` example demonstrates the end-to-end flow.
+
+The remaining gaps, while still critical to broad adoption, are now narrower:
+
+| Gap | Status | Impact |
+|---|---|---|
+| **No SDKs** | Not started | Python, TypeScript, Go SDKs don't exist. A developer who wants to build an agent on AAF must write Rust. This eliminates 95%+ of the target audience. |
+| **LLM integration — partial** | Anthropic landed; OpenAI + local pending | `AnthropicProvider` and `ModelPricing` are implemented. OpenAI and local (Ollama/vLLM) providers, enhanced `ValueRouter` health tracking, and LLM-powered intent/planner/recovery remain. |
+| **Capability invocation — partial** | In-process + HTTP landed; MCP + A2A + gRPC pending | `GoverningToolExecutor` and `InProcessInvoker` are implemented. MCP client/server bridge, A2A participant, and gRPC dynamic invoker remain. |
+| **No protocol bridges** | Not started | The `adapters/` directory is empty. MCP client/server and A2A participant are prerequisites for ecosystem integration. |
+
+Phase 1 is complete. Phases 2-4 are the path forward.
+
+### 20.1 F1 — Developer Experience Platform
+
+**Problem:** AAF has no SDK in any language. The only way to interact with AAF is through Rust integration tests or raw HTTP/gRPC calls to `aaf-server`.
+
+**Why this matters:** Successful frameworks are adopted bottom-up. A developer finds the framework, runs `pip install aaf` or `npm install @aaf/sdk`, writes a hello-world agent in 20 lines, and gradually discovers governance, sagas, and federation. AAF has no entry point for this journey.
+
+**What F1 delivers:**
+
+1. **Python SDK** (`sdk/python/`) — `pip install aaf-sdk`
+   - `@capability` / `@guard` / `@compensation` decorators
+   - Pydantic v2 models generated from JSON Schema contracts
+   - `AafAgent` class for defining agent behavior
+   - `AafClient` for submitting intents and receiving results
+   - `aaf` CLI for project scaffolding, local dev, deployment
+   - `pytest` fixtures for testing agents against mock runtime
+   - Async-first with `asyncio`
+
+2. **TypeScript SDK** (`sdk/typescript/`) — `npm install @aaf/sdk`
+   - Zod schemas generated from JSON Schema contracts
+   - Type-safe builder pattern for agents, capabilities, sagas
+   - Streaming event consumer for real-time UI integration
+   - Vitest test utilities
+
+3. **Go SDK** (`sdk/go/`) — `go get github.com/aaf/sdk-go`
+   - Code-generated gRPC stubs (when protos land)
+   - `context.Context`-threaded client
+   - Minimal surface: client + sidecar + wrapper
+
+4. **Developer CLI** (part of Python SDK)
+   - `aaf init` — scaffold a new agent project
+   - `aaf dev` — start local runtime + sidecar
+   - `aaf test` — run agent tests against mock runtime
+   - `aaf deploy` — package and deploy agent
+   - `aaf trace` — inspect execution traces
+
+**Architecture:** SDKs are **thin clients** over AAF's HTTP/gRPC/WebSocket APIs. They do NOT embed the runtime. Contract types are generated from `spec/schemas/` JSON Schemas, never hand-written.
+
+### 20.2 F2 — Live LLM Integration & Intelligent Model Routing
+
+**Problem:** `aaf-llm` defines an `LLMProvider` trait and a `MockProvider`. There are zero concrete implementations. AAF's agents cannot call Claude, OpenAI, Ollama, or any other model.
+
+**Why this matters:** An agent framework that can't call LLMs is like a web framework without HTTP. Every demo, every test, every evaluation currently uses `MockProvider` with hardcoded responses.
+
+**What F2 delivers:**
+
+1. **Anthropic Claude provider** — Primary integration via Messages API with `tools[]`, `tool_choice`, streaming, token counting, rate limit handling, retry with backoff
+2. **OpenAI provider** — Chat Completions API with function calling
+3. **Local model provider** — Ollama / vLLM via OpenAI-compatible API for air-gapped dev/test
+4. **Value-based model router** — Cost-optimal model selection per request, latency-aware routing, classification-aware provider filtering, automatic fallback on provider failure
+5. **Budget enforcement at the wire** — Real token counting, cost tracking against intent's `cost_budget_usd`, pre-call budget check
+
+**AAF's value-based routing is genuinely innovative.** Most frameworks use a single model or manual model selection. AAF's architecture supports automatic model routing based on task complexity, cost budget, data classification, latency requirements, and degradation level.
+
+### 20.3 F3 — Universal Protocol Bridge (MCP + A2A)
+
+**Problem:** AAF's `adapters/` directory is empty. The framework claims to be the orchestration layer between agents, services, and APIs, but has no concrete protocol implementations.
+
+**Why this matters:** The AI ecosystem is rapidly converging on MCP as the standard for tool integration. A framework that doesn't speak MCP is isolated from the ecosystem.
+
+**What F3 delivers:**
+
+1. **MCP Client adapter** — Connect to any MCP server (stdio, SSE, streamable HTTP), auto-discover MCP tools and register as AAF capabilities, policy engine gates every MCP tool invocation
+2. **MCP Server adapter** — Expose AAF capabilities as MCP tools, any service behind an AAF sidecar becomes an MCP tool
+3. **A2A Participant** — Agent Card serving, task lifecycle (send, get, cancel), trust propagation across A2A boundaries (Rule 22: DID-based)
+4. **Capability-as-Protocol bridge pattern** — Single capability definition, four protocol facades (MCP, A2A, REST, gRPC), governance applied uniformly regardless of which protocol face is used
+
+**This is where AAF's unique value proposition becomes most visible: governed protocol bridges.** Every other MCP host passes tool calls through directly. AAF applies policy checks, budget limits, provenance tracking, PII filtering, trust-level gating, and trace recording to every external interaction.
+
+### 20.4 Enhancement Dependencies & Implementation Order
+
+```
+F2 (LLM Providers)  ──────> standalone, no deps
+       │
+       ▼
+F1 (SDKs)  ──────────────> depends on F2 (SDK needs real providers for demos)
+       │                   depends on aaf-server APIs (HTTP/gRPC/WS)
+       ▼
+F3 (Protocol Bridges) ───> depends on F2 (MCP tool calls need LLM)
+                           depends on aaf-registry (capability discovery)
+                           depends on aaf-policy (governed bridges)
+```
+
+**Implementation order:** F2 → F1 → F3
+
+Within each enhancement: Slice A → B → C (strict ordering).
+
+### 20.5 New Architecture Rules (Rules 34–38)
+
+**Rule 34: SDKs Are Generated, Not Hand-Written**
+All contract types in SDKs are generated from `spec/schemas/` JSON Schemas. The generation pipeline runs as part of `make codegen`. Hand-written SDK types that duplicate schema definitions are a build error.
+
+**Rule 35: Providers Are Observable**
+Every LLM provider call records: model name, input tokens, output tokens, cost USD, latency ms, stop reason, and rate limit status. This is wired into the trace system (Rule 12) and budget tracker (Rule 8). Provider calls without observation are a bug.
+
+**Rule 36: Protocol Bridges Are Governed**
+Every external protocol interaction (MCP tool call, A2A task delegation, REST API call) passes through the policy engine (Rule 6), respects trust boundaries (Rule 22), charges the budget (Rule 8), and records an observation (Rule 12). Ungoverned external calls are architecturally impossible.
+
+**Rule 37: SDK Ergonomics Over Completeness**
+SDKs should make the common case trivial (define a capability in 5 lines, submit an intent in 3 lines). A Python decorator that "just works" is worth more than 100% contract coverage with verbose builders.
+
+**Rule 38: Bridge Failures Are Graceful**
+When an MCP server is unreachable, an A2A agent is unavailable, or an external API times out, the bridge degrades gracefully following the Degradation Chain (Levels 0-4). Unavailability removes the capability from the active registry; it never causes a pipeline crash.
+
+### 20.6 Success Criteria
+
+**F1:** A Python developer can `pip install aaf-sdk`, define a capability with `@capability` decorator, start a local runtime with `aaf dev`, and submit an intent — all in under 10 minutes.
+
+**F2:** An agent can call Claude Sonnet and receive a real response, with token counts, cost tracking, and latency recording in the trace. The ValueRouter selects the cheapest model that satisfies constraints.
+
+**F3:** An AAF agent can call an external MCP tool through the MCP client bridge with policy checks and trace recording. An external AI tool can invoke an AAF capability through the MCP server bridge with full governance.
+
+### 20.7 What This Enables
+
+After F1 + F2 + F3, AAF becomes:
+
+1. **Usable** — Developers in Python, TypeScript, and Go can build agents with familiar patterns
+2. **Real** — Agents call actual LLMs with intelligent model selection and production-grade error handling
+3. **Connected** — Agents access the entire MCP ecosystem and interoperate with other agents via A2A
+4. **Governed** — All of the above passes through AAF's policy engine, trust system, budget tracker, and trace recorder
+5. **Innovative** — Value-based model routing, governed protocol bridges, and enterprise-grade agent governance are capabilities no other framework offers
+
+### 20.8 Relationship to Wave 3
+
+Wave 3 (E4 Tool Loop, E5 Streaming, E6 Knowledge) remains valid and should proceed. Wave 4 addresses lower-level infrastructure that E4/E5/E6 depend on implicitly. Recommended interleaving:
+
+```
+F2-A (Claude provider)
+  → E4-A (tool loop needs real provider)
+    → F1-A (Python SDK core)
+      → E4-B (multi-turn loop)
+        → F2-B (router + budget)
+          → E5-A (streaming)
+            → F3-A (MCP client)
+              → F1-B (TS SDK + CLI)
+                → ... remaining slices
+```
+
+### 20.9 New Packages & Modified Crates
+
+| Package | Enhancement | Purpose |
+|---|---|---|
+| `sdk/python/` | F1 | Python SDK: decorators, client, CLI, testing |
+| `sdk/typescript/` | F1 | TypeScript SDK: builders, client, streaming |
+| `sdk/go/` | F1 | Go SDK: client, sidecar, wrapper |
+| `scripts/codegen/` | F1 | JSON Schema → SDK contract code generator |
+| `adapters/mcp/` (Rust crate) | F3 | MCP client + server bridge |
+| `adapters/a2a/` (Rust crate) | F3 | A2A participant bridge |
+
+| Modified Crate | Changes |
+|---|---|
+| `aaf-llm` | Real providers (Anthropic, OpenAI, local), `ProviderMetrics`, `ValueRouter`, streaming, pricing |
+| `aaf-contracts` | `ProviderMetrics` if needed as a shared type |
+| `aaf-runtime` | Wire ValueRouter, ProtocolBridge as CapabilityInvoker |
+| `aaf-server` | Config for providers, MCP servers, A2A; new API endpoints for SDK clients |
+| `aaf-registry` | Extend to track capability protocol origin (local, mcp, a2a) |
+
+### 20.10 Implementation Status & Detailed Specifications
+
+This section consolidates implementation-level detail from the original Three Pillars analysis (formerly PROJECT_ENHANCE.md), updated to reflect current state. It supplements sections 20.1-20.9 with what has been built, what remains, phased ordering, success criteria, and scoping exclusions.
+
+#### 20.10.1 Pillar 1 (The Brain) — What Has Been Built
+
+**Landed (Phase 1 Slice A):**
+
+- `AnthropicProvider` (`aaf-llm/src/anthropic.rs`) — Uses `reqwest` directly for full control over retries, timeouts, and observability. Maps `ChatMessage` to Anthropic Messages API format: `Role::System` to top-level `system` parameter, `Role::ToolUse` to `tool_use` content blocks, `Role::ToolResult` to `tool_result` content blocks, `ToolDefinition` to `tools` array with `input_schema`, `ToolChoice` to `tool_choice` parameter. Response parsing extracts `content` blocks (text + tool_use), `usage.input_tokens`/`usage.output_tokens`, calculates `cost_usd` from the pricing table, and maps `stop_reason` to the `StopReason` enum. Error handling covers 429 (exponential backoff with `retry-after`), 529 (backoff with jitter), 500/503 (retry up to `max_retries`), 400 (no retry), and network timeout.
+- `ModelPricing` (`aaf-llm/src/pricing.rs`) — Data-driven pricing table keyed by model pattern regex. Supports `input_per_mtok`, `output_per_mtok`, and `cache_read_per_mtok`. Overridable via configuration.
+- `CallBudget` wrapper for per-call budget enforcement (pre-existing, now used by the real provider).
+- `ValueRouter` with `RoutingPolicy` trait and tier-based dispatch (pre-existing).
+- `ProviderMetrics` struct for observability (pre-existing).
+
+**Remaining (Phases 2-3):**
+
+- OpenAI provider (`aaf-llm/src/openai.rs`) — Maps `ChatRequest` to Chat Completions API. Tools to `functions` format. Simpler than Anthropic (single content string vs content blocks).
+- Local provider (`aaf-llm/src/local.rs`) — OpenAI-compatible API for Ollama, vLLM, llama.cpp. Default endpoint `http://localhost:11434/v1`. Zero-cost fallback for development.
+- Enhanced `ValueRouter` — Per-provider sliding window health tracking, pre-call cost estimation from input size, automatic fallback on provider failure with trace recording, streaming dispatch.
+- LLM-powered intent compilation (`LLMClassifier`) — Sends natural language to a small/fast model with structured output schema. Falls back to existing `RuleClassifier` when LLM unavailable.
+- LLM-powered planning (`LLMPlanner`) — Receives intent + available capabilities, asks LLM to produce execution plan as structured JSON, validates against composition safety rules. Falls back to rule-based planner.
+- LLM-powered saga recovery (`LLMRecoveryAnalyzer`) — Receives failure context, asks LLM to classify failure and recommend recovery strategy, returns `RecoveryDecision`. Falls back to rule-based recovery.
+- Streaming support — `ChatEvent` enum types exist but implementation is pending.
+
+#### 20.10.2 Pillar 2 (The Hands) — What Has Been Built
+
+**Landed (Phase 1 Slice A):**
+
+- `GoverningToolExecutor` (`aaf-runtime/src/invoke.rs`) — Bridges the existing `ToolExecutor` trait to capability invocation. Looks up capability by name in the registry, constructs `InvocationContext`, dispatches through the invoker, and returns the result as a JSON string. Replaces `NoOpToolExecutor` in production configurations.
+- `InProcessInvoker` (`aaf-runtime/src/invoke.rs`) — For `EndpointKind::InProcess` capabilities. Executes capability logic within the same process.
+- `ServiceInvoker` (`aaf-runtime/src/invoke.rs`) — For `EndpointKind::Http` capabilities. Dispatches to HTTP service endpoints with timeout enforcement and latency recording.
+- `governed-invocation` example — Demonstrates the end-to-end flow: agent node tool call reaches a real service endpoint through the governing executor.
+- `CapabilityEndpoint { kind, address, method }` is now actively used by the runtime (previously metadata-only).
+
+**Remaining (Phases 2-3):**
+
+- MCP client bridge (`aaf-transport/src/mcp.rs`) — Discovery via `tools/list`, invocation via `tools/call`, transports (stdio, SSE, streamable HTTP). Every MCP call governed by policy engine.
+- MCP server — Expose AAF capabilities as MCP tools. Any service behind an AAF sidecar becomes an MCP tool. This is a high-impact feature: any MCP-compatible AI tool gets governed access to enterprise services.
+- A2A client bridge (`aaf-transport/src/a2a.rs`) — Agent Card fetch, task lifecycle (send, get, cancel), DID-verified trust propagation, federation data boundary enforcement.
+- gRPC dynamic invoker — `tonic` with dynamic service/method dispatch (no codegen required). Connect to address, serialize input via dynamic message descriptors, call method with timeout.
+- Full `CapabilityDispatcher` — Unified dispatcher routing to HTTP, gRPC, MCP, A2A, and InProcess invokers based on `EndpointKind`, with pre/post policy checks, observation recording, and budget charging at every invocation.
+
+#### 20.10.3 Pillar 3 (The Gateway) — What Remains
+
+No slices of Pillar 3 have landed yet. The full scope remains as described in sections 20.1 (F1) and 20.3 (F3):
+
+- HTTP API server — `POST /v1/intents`, `GET /v1/capabilities/discover`, `GET /v1/traces/{id}`, etc. via `axum`.
+- Configuration-driven setup — `aaf-server run aaf.yaml` reads YAML and wires all components automatically. No Rust code needed.
+- Python SDK — `@capability` / `@guard` / `@compensation` decorators, `AafClient`, `aaf` CLI, `pytest` fixtures.
+- TypeScript SDK — Zod schemas, type-safe builders, streaming event consumer.
+- Contract code generation — `scripts/codegen/generate.py` reads `spec/schemas/*.schema.json` and generates pydantic v2 models (Python) and zod schemas (TypeScript).
+- End-to-end "hello world" example — `docker compose up`, submit intent via `curl`, see the trace. Target: zero-to-wow in 10 minutes.
+
+#### 20.10.4 Phased Implementation Order
+
+```
+Phase 1 (COMPLETE):
+  Pillar 1 Slice A — AnthropicProvider + ModelPricing + budget integration
+  Pillar 2 Slice A — InProcessInvoker + ServiceInvoker + GoverningToolExecutor
+
+Phase 2 (next):
+  Pillar 1 Slice B — OpenAI + Local providers + enhanced ValueRouter
+  Pillar 2 Slice B — MCP client bridge + MCP server
+  Pillar 3 Slice A — HTTP API server + config-driven setup
+
+Phase 3:
+  Pillar 1 Slice C — LLM-powered intent/planner/recovery + streaming
+  Pillar 2 Slice C — A2A bridge + gRPC invoker
+  Pillar 3 Slice B — Python SDK + TypeScript SDK + codegen
+
+Phase 4:
+  Pillar 3 Slice C — End-to-end hello-world example + documentation
+```
+
+After Phase 1, AAF can call a real LLM and invoke a real service endpoint. (This milestone is reached.)
+After Phase 2, AAF is an MCP-enabled orchestration platform with an HTTP API.
+After Phase 3, developers can use AAF from Python or TypeScript.
+After Phase 4, a new developer can go from zero to running in 10 minutes.
+
+#### 20.10.5 Success Criteria
+
+1. **Pillar 1 (Brain):** `cargo test --workspace` includes a test that sends a real prompt to Claude API and receives a meaningful response, with budget correctly charged and trace correctly recorded. (Gated by `ANTHROPIC_API_KEY` env var.) *Slice A criterion met.*
+
+2. **Pillar 2 (Hands):** An integration test starts a service (wiremock or in-process), registers a capability pointing to it, submits an intent, and the agent node's tool call reaches the service and receives a real response. *Slice A criterion met via governed-invocation example.*
+
+3. **Pillar 3 (Gateway):** A developer with no Rust knowledge runs `pip install aaf-sdk`, starts `aaf-server`, submits an intent from Python, and gets a result — all within 5 minutes following the README. *Not yet started.*
+
+#### 20.10.6 Scoping Exclusions
+
+To keep scope focused, the following are explicitly out of scope for Wave 4:
+
+- **Go SDK** — Python and TypeScript cover >90% of the target audience
+- **gRPC dynamic invoker** — HTTP covers most services; gRPC can come later
+- **Dashboard UI** — CLI + trace API is sufficient for the initial release
+- **Docker/Helm production packaging** — A `docker compose` file for examples is enough
+- **Real storage backends** — In-memory and SQLite storage are sufficient for the first release
+- **Fine-tuning / RAG** — The learning pipeline architecture exists; real ML integration can come later
+
+---
+
+*This design document is the Agentic Application Framework's service-architecture integration guide. Enhancement content from PROJECT_ENHANCE.md has been consolidated into sections 20.0-20.10. The document will be updated continuously as implementation progresses.*

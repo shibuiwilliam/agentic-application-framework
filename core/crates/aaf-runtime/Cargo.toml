@@ -11,6 +11,7 @@ aaf-contracts = { workspace = true }
 aaf-storage = { workspace = true }
 aaf-trace = { workspace = true }
 aaf-policy = { workspace = true }
+aaf-registry = { workspace = true }
 aaf-trust = { workspace = true }
 aaf-memory = { workspace = true }
 aaf-llm = { workspace = true }

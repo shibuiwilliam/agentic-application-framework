@@ -199,13 +199,16 @@ pub trait LLMProvider: Send + Sync {
    }
    ```
 
-3. **Add the dependency.** The workspace does not currently pin
-   `reqwest` or any HTTP client — you must add it to
-   `core/crates/aaf-llm/Cargo.toml` under `[dependencies]` with
-   a Rust-1.70-compatible version. Prefer `ureq` for a
-   lightweight sync HTTP client wrapped in `tokio::task::spawn_blocking`;
-   `reqwest` pulls a large tree and has historically been the
-   cause of build breakage.
+3. **Add the dependency.** Wave 4 F2 adds `reqwest` (with
+   json+stream features) to `core/crates/aaf-llm/Cargo.toml`.
+   If F2 has already landed, `reqwest` is available — use it.
+   If not, add it with a Rust-1.70-compatible version.
+
+   **Rule 35 (Providers Are Observable):** Your provider **must**
+   return `ProviderMetrics` in every `ChatResponse`:
+   `model`, `input_tokens`, `output_tokens`, `cost_usd`,
+   `latency_ms`, `rate_limit_remaining`, `provider`. Provider
+   calls without metrics are a bug.
 
 4. **Wire it into the router.**
 
@@ -240,9 +243,8 @@ exceed its budget silently.
 
 The value router picks a tier based on the intent's risk tier
 (Read → `Low`, Write → `Medium`, Governance → `High`). You can
-override via `ValueRouter::register` at any tier. When E1
-Slice B lands, `LearnedRoutingPolicy` will plug into the router
-and pick tiers based on observed cost/quality per
+override via `ValueRouter::register` at any tier. `LearnedRoutingPolicy` (landed in E1 Slice B) plugs into the
+router and picks tiers based on observed cost/quality per
 `(intent_type, risk_tier, entity_class)`.
 
 ---
@@ -417,14 +419,36 @@ Implement the `Judge` trait. The shipped
 `DeterministicJudge` uses Jaccard similarity; a Slice C
 follow-up could add `LLMJudge` backed by an `LLMProvider`.
 
+### New protocol bridge (F3 — planned)
+
+After Wave 4 F3 lands, protocol bridges become a formal
+extension point. The `ProtocolBridge` in `adapters/` dispatches
+capability invocations across protocols:
+
+- **MCP** — external tools via `McpClient::invoke_tool`
+- **A2A** — external agents via `A2aParticipant::handle_task_send`
+- **Local** — in-process capabilities
+
+To add a new protocol:
+
+1. Implement the `CapabilityInvoker` trait (or the new bridge
+   trait, design TBD in F3 Slice C).
+2. Register discovered capabilities in the registry with a
+   protocol-origin tag (e.g. `mcp:server-name`, `a2a:agent-name`).
+3. Ensure governance (Rule 36): policy check → budget check →
+   invoke → policy check → trace. Every bridge invocation must
+   pass through these gates.
+4. Handle failures gracefully (Rule 38): remove the capability
+   from the registry on unavailability.
+
 ### New fast-path rule source
 
 The `FastPathRuleSet` accepts both hand-authored rules (from a
 YAML config) and learned rules (from `aaf-learn::fast_path_miner`,
-landing in E1 Slice B). If you want to add rules from an
+landed in E1 Slice B). If you want to add rules from an
 external source, write a loader that produces
 `Vec<FastPathRule>` and calls `FastPathRuleSet::add_rule` or
-(once E1 B lands) `FastPathRuleSet::add_learned`.
+`FastPathRuleSet::add_learned`.
 
 ---
 
@@ -434,9 +458,10 @@ external source, write a loader that produces
   `IntentType` or `TaskState` as an "extension"; those are
   core shapes that require a contract version bump. See
   [changing-contracts.md](changing-contracts.md).
-- **Architecture rules.** The thirteen (plus the E1/E2/E3 and
-  X1 rules) are in `CLAUDE.md`. Adding a new rule is an
-  architectural decision, not an extension — write an ADR first.
+- **Architecture rules.** The thirteen foundation + E1/E2/E3/X1
+  rules + Wave 4 rules 34–38 are in `CLAUDE.md`. Adding a new
+  rule is an architectural decision, not an extension — write
+  an ADR first.
 - **The policy hook points.** `PrePlan`, `PreStep`, `PostStep`,
   `PreArtifact` are the four canonical hook points in the
   runtime. Adding a fifth is a runtime change that ripples

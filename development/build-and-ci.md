@@ -10,7 +10,7 @@
 | Gate | Command | Passes when |
 |---|---|---|
 | 1. Build | `cargo build --workspace` | Exit 0, zero warnings |
-| 2. Test | `cargo test --workspace` | Exit 0, zero failures (currently 420 passing) |
+| 2. Test | `cargo test --workspace` | Exit 0, zero failures (currently 554 passing) |
 | 3. Clippy (lax) | `cargo clippy --workspace --all-targets -- -W clippy::all` | Zero warnings |
 | 4. Schemas | `python3 scripts/schema_validate.py --schema-dir spec/schemas --examples-dir spec/examples` | `0 failures` (currently 9/9 validating, 2 skipped) |
 | 5. Ontology lint | `make ontology-lint` (or `target/debug/aaf-server ontology lint spec/examples`) | `0 errors` |

@@ -64,19 +64,16 @@ escalations).
 | OTLP JSON export | `aaf-trace::export::otel_json_for` |
 | `eval-suite-order-processing.yaml` example | `spec/examples/` |
 
-### Slice B — `aaf-learn` crate + subscribers (NEXT)
-
-Per the plan in [`../../development/next-slices.md`](../../development/next-slices.md):
+### Slice B — `aaf-learn` crate + subscribers (LANDED)
 
 | Deliverable | Location |
 |---|---|
-| `aaf-learn` crate with 4 subscriber modules | `core/crates/aaf-learn/` (new) |
+| `aaf-learn` crate with 4 subscriber modules | `core/crates/aaf-learn/` |
 | `FastPathMiner` — proposes new fast-path rules from agent-assisted traffic | `aaf-learn::fast_path_miner` |
 | `CapabilityScorer` — outcome-weighted reputation per capability | `aaf-learn::capability_scorer` |
 | `RouterTuner` — per-`(intent_type, risk_tier, entity_class)` model weights | `aaf-learn::router_tuner` |
 | `EscalationTuner` — approval threshold adjustments within policy bounds | `aaf-learn::escalation_tuner` |
-| `TraceSubscriber` trait + spawn-based fan-out | `aaf-trace::recorder::Recorder` extensions |
-| `Capability.reputation: f32` + `Capability.learned_rules: Vec<LearnedRuleRef>` | `aaf-registry::store` |
+| `TraceSubscriber` trait + spawn-based fan-out | `aaf-trace::recorder::Recorder` |
 | `RoutingPolicy` trait + `LearnedRoutingPolicy` impl | `aaf-llm::router` |
 | Learned fast-path rules tagged, policy-pack-disable-able | `aaf-planner::fast_path` |
 | Smoke test | `core/tests/integration/tests/e1_slice_b_smoke.rs` |
@@ -185,9 +182,10 @@ they become live.
 ## Further reading
 
 - [`../../development/next-slices.md`](../../development/next-slices.md)
-  → Slice 1 — E1 Slice B
+  → Slice 1 — E1 Slice C (CLI, semantic regression, governance)
 - [`../../development/observability.md`](../../development/observability.md)
 - [`../../development/contracts-reference.md`](../../development/contracts-reference.md)
   → `Observation` / `Outcome` sections
 - `PROJECT.md` §16.1
 - `core/crates/aaf-eval/src/` — the Slice A harness
+- `core/crates/aaf-learn/src/` — the Slice B learning subscribers

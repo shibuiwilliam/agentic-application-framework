@@ -78,10 +78,9 @@ intent compiler.
 - **Hand-authored** — operators write rules in
   `fast-path-rules.yaml` (schema under
   `spec/schemas/fast-path-rules.schema.json`).
-- **Learned** (deferred to E1 Slice B) — the `fast_path_miner` in
-  the forthcoming `aaf-learn` crate will observe recurring
-  agent-assisted patterns and propose new rules, gated by the
-  approval workflow before they become live.
+- **Learned** (E1 Slice B) — the `FastPathMiner` in `aaf-learn`
+  observes recurring agent-assisted patterns and proposes new
+  rules, gated by the approval workflow before they become live.
 
 Learned rules are tagged so the policy pack can disable them
 wholesale if something goes wrong.

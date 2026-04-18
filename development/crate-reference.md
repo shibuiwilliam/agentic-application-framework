@@ -263,12 +263,12 @@ Bedrock, Vertex, Ollama/vLLM) deferred.
 - `revocation::{RevocationRegistry, InMemoryRevocationRegistry, RevocationEntry, RevocationKind}`
 - `error::IdentityError`
 
-**Signature backend:** Slice A ships a deterministic HMAC-SHA256
-backend. Slice B swapped the runtime integration but the backend
-itself remains HMAC; Ed25519 is a Slice C deliverable.
+**Signature backend:** Slices A and B ship a deterministic HMAC-SHA256
+backend. Slice C added SBOM exporters (SPDX + CycloneDX),
+co-signed capability tokens, and identity CLI. Ed25519 backend swap
+is deferred pending Rust MSRV upgrade.
 
-**Status:** X1 Slice A (crate foundations) + Slice B (runtime / trust
-/ registry wiring) both landed. Slice C deferred.
+**Status:** X1 complete (Slices A + B + C all landed).
 
 ---
 
@@ -283,8 +283,38 @@ itself remains HMAC; Ed25519 is a Slice C deliverable.
 - `replay::{Replayer, ReplayDivergence}`
 - `regression::{RegressionReport, ReportWriter}`
 
-**Status:** E1 Slice A landed. `aaf-learn` (Slice B subscribers)
-deferred.
+**Status:** E1 Slice A landed. E1 Slice B delivered `aaf-learn`.
+
+---
+
+### `aaf-learn`
+
+**Role:** Online learning — four subscriber modules (E1 Slice B).
+
+**Key types:**
+
+- `fast_path_miner::{FastPathMiner, MinerConfig, LearnedRule}` —
+  watches observations for recurring patterns; proposes new
+  fast-path rules gated by approval (Rule 18).
+- `capability_scorer::CapabilityScorer` — outcome-weighted
+  reputation updates for capabilities.
+- `router_tuner::RouterTuner` — adjusts LLM routing weights
+  per `(intent_type, risk_tier, entity_class)`.
+- `escalation_tuner::EscalationTuner` — adjusts approval-
+  threshold hints within policy-pack bounds.
+
+**Design constraints:**
+
+- All subscribers are spawned via `tokio::spawn` — never on the
+  hot path (Rule 16).
+- Every adaptation carries `(learned_by, learned_at, evidence)`
+  and can be rolled back (Rule 17).
+- Learned rules cannot mutate policy; they may only *propose*
+  tightening within the bounds of the active policy pack
+  (Rule 18).
+
+**Status:** E1 Slice B landed. CLI (`aaf learn`) deferred to
+E1 Slice C.
 
 ---
 
@@ -457,5 +487,66 @@ to X1 Slice C.
 - `lint` — E2 Slice C lint module (LintFinding / Severity / ratio ramp)
 - `import` — E2 Slice C OpenAPI → ontology importer
 
-**Status:** Implemented + tested. gRPC / REST / WebSocket drivers
-deferred.
+**Status:** Implemented + tested (including X1 Slice C identity
+subcommands). gRPC / REST / WebSocket drivers deferred.
+
+---
+
+## Future Crates (Wave 4)
+
+The following crates / packages are planned as part of Wave 4
+(see `PROJECT.md` §20 and `CLAUDE.md` rules 34–38):
+
+### `aaf-llm` modifications (F2)
+
+**Changes:** Real LLM providers (Anthropic, OpenAI, local),
+`ProviderMetrics` on `ChatResponse`, `ValueRouter` with
+cost/latency/capability scoring, pricing table, health tracking,
+auto-fallback, budget pre-check, streaming.
+
+**New files:** `anthropic.rs`, `openai.rs`, `local.rs` (rewritten),
+`pricing.rs`.
+
+**Dependencies to add:** `reqwest` (json+stream), `wiremock` (dev).
+
+### `adapters/mcp/` (F3) — `aaf-mcp`
+
+**Role:** MCP client + server bridge. Connects AAF to the MCP
+ecosystem with full governance (Rule 36).
+
+**Key types (planned):**
+- `McpClient` — connect to external MCP servers, discover tools,
+  register as AAF capabilities, invoke with policy gating
+- `McpServer` — expose AAF capabilities as MCP tools
+- `McpTransport` trait with `Stdio`, `Sse`, `StreamableHttp` impls
+
+**Dependencies (planned):** reqwest, tokio-tungstenite,
+eventsource-stream, aaf-contracts, aaf-policy, aaf-trace,
+aaf-registry.
+
+### `adapters/a2a/` (F3) — `aaf-a2a`
+
+**Role:** A2A participant bridge. Agent Card serving, task
+lifecycle (send/get/cancel), DID-based trust propagation,
+federation agreement enforcement.
+
+**Key types (planned):**
+- `A2aParticipant` — handle incoming agent-to-agent requests
+- `AgentCard` serving (builds on `aaf-registry::a2a`)
+- `ProtocolBridge` — unified invoker for local + MCP + A2A
+
+### SDK Packages (F1)
+
+**`sdk/python/`** — `pip install aaf-sdk`. Decorators
+(`@capability`, `@guard`, `@compensation`), `AafClient`,
+`MockRuntime`, `aaf` CLI. Pydantic v2 models generated from
+`spec/schemas/`.
+
+**`sdk/typescript/`** — `npm install @aaf/sdk`. Zod schemas,
+type-safe builders, streaming consumer, vitest utilities.
+
+**`sdk/go/`** — `go get github.com/aaf/sdk-go`. Client, sidecar
+builder, wrapper builder.
+
+**`scripts/codegen/`** — JSON Schema → SDK contract types
+(Python pydantic, TypeScript zod, Go structs).

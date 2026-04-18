@@ -11,7 +11,7 @@ use regex::Regex;
 
 static PATTERNS: Lazy<Vec<Regex>> = Lazy::new(|| {
     [
-        r"(?i)ignore (all|previous) (instructions|rules)",
+        r"(?i)ignore (all )?(previous )?(instructions|rules)",
         r"(?i)disregard (the )?system prompt",
         r"(?i)you are now",
         r"(?i)pretend to be",

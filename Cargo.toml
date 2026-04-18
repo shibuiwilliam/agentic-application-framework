@@ -27,7 +27,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.70"
 license = "Apache-2.0"
@@ -54,27 +54,27 @@ hex = "=0.4.3"
 rand = "=0.8.5"
 
 # Internal crates (path deps)
-aaf-contracts = { path = "core/crates/aaf-contracts", version = "0.1.0" }
-aaf-ontology  = { path = "core/crates/aaf-ontology",  version = "0.1.0" }
-aaf-identity  = { path = "core/crates/aaf-identity",  version = "0.1.0" }
-aaf-storage   = { path = "core/crates/aaf-storage",   version = "0.1.0" }
-aaf-trace     = { path = "core/crates/aaf-trace",     version = "0.1.0" }
-aaf-trust     = { path = "core/crates/aaf-trust",     version = "0.1.0" }
-aaf-memory    = { path = "core/crates/aaf-memory",    version = "0.1.0" }
-aaf-policy    = { path = "core/crates/aaf-policy",    version = "0.1.0" }
-aaf-registry  = { path = "core/crates/aaf-registry",  version = "0.1.0" }
-aaf-intent    = { path = "core/crates/aaf-intent",    version = "0.1.0" }
-aaf-llm       = { path = "core/crates/aaf-llm",       version = "0.1.0" }
-aaf-runtime   = { path = "core/crates/aaf-runtime",   version = "0.1.0" }
-aaf-saga      = { path = "core/crates/aaf-saga",      version = "0.1.0" }
-aaf-planner   = { path = "core/crates/aaf-planner",   version = "0.1.0" }
-aaf-sidecar   = { path = "core/crates/aaf-sidecar",   version = "0.1.0" }
-aaf-wrapper   = { path = "core/crates/aaf-wrapper",   version = "0.1.0" }
-aaf-federation= { path = "core/crates/aaf-federation",version = "0.1.0" }
-aaf-transport = { path = "core/crates/aaf-transport", version = "0.1.0" }
-aaf-eval      = { path = "core/crates/aaf-eval",      version = "0.1.0" }
-aaf-surface   = { path = "core/crates/aaf-surface",   version = "0.1.0" }
-aaf-learn     = { path = "core/crates/aaf-learn",     version = "0.1.0" }
+aaf-contracts = { path = "core/crates/aaf-contracts", version = "0.2.0" }
+aaf-ontology  = { path = "core/crates/aaf-ontology",  version = "0.2.0" }
+aaf-identity  = { path = "core/crates/aaf-identity",  version = "0.2.0" }
+aaf-storage   = { path = "core/crates/aaf-storage",   version = "0.2.0" }
+aaf-trace     = { path = "core/crates/aaf-trace",     version = "0.2.0" }
+aaf-trust     = { path = "core/crates/aaf-trust",     version = "0.2.0" }
+aaf-memory    = { path = "core/crates/aaf-memory",    version = "0.2.0" }
+aaf-policy    = { path = "core/crates/aaf-policy",    version = "0.2.0" }
+aaf-registry  = { path = "core/crates/aaf-registry",  version = "0.2.0" }
+aaf-intent    = { path = "core/crates/aaf-intent",    version = "0.2.0" }
+aaf-llm       = { path = "core/crates/aaf-llm",       version = "0.2.0" }
+aaf-runtime   = { path = "core/crates/aaf-runtime",   version = "0.2.0" }
+aaf-saga      = { path = "core/crates/aaf-saga",      version = "0.2.0" }
+aaf-planner   = { path = "core/crates/aaf-planner",   version = "0.2.0" }
+aaf-sidecar   = { path = "core/crates/aaf-sidecar",   version = "0.2.0" }
+aaf-wrapper   = { path = "core/crates/aaf-wrapper",   version = "0.2.0" }
+aaf-federation= { path = "core/crates/aaf-federation",version = "0.2.0" }
+aaf-transport = { path = "core/crates/aaf-transport", version = "0.2.0" }
+aaf-eval      = { path = "core/crates/aaf-eval",      version = "0.2.0" }
+aaf-surface   = { path = "core/crates/aaf-surface",   version = "0.2.0" }
+aaf-learn     = { path = "core/crates/aaf-learn",     version = "0.2.0" }
 
 [profile.release]
 lto = "thin"

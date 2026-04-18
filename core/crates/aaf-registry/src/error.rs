@@ -34,4 +34,8 @@ pub enum RegistryError {
     /// Reputation update was rate-limited (E1 Slice B).
     #[error("reputation update rate-limited for capability {0}")]
     RateLimited(String),
+
+    /// No capability found with the given name or id.
+    #[error("capability not found: {0}")]
+    NotFound(String),
 }

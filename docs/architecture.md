@@ -42,7 +42,7 @@ in-between is a free-form string.
 
 ---
 
-## The 21 crates at a glance
+## The 22 crates at a glance
 
 Organised in three tiers by dependency layer.
 
@@ -67,11 +67,13 @@ Organised in three tiers by dependency layer.
   health, degradation state machine, attestation gate.
 - `aaf-intent` — NL → IntentEnvelope pipeline.
 - `aaf-llm` — LLMProvider trait + mock + value router + per-call
-  budget.
+  budget + LearnedRoutingPolicy (E1 Slice B).
 - `aaf-identity` — DID, keystore, signed manifest, SBOM,
-  capability token, revocation registry (X1).
+  capability token, revocation registry (X1 complete).
 - `aaf-eval` — feedback spine: Judge, GoldenSuite, Replayer,
   RegressionReport (E1 Slice A).
+- `aaf-learn` — online learning: FastPathMiner, CapabilityScorer,
+  RouterTuner, EscalationTuner (E1 Slice B).
 - `aaf-surface` — app-native surface: AppEvent, Situation,
   ActionProposal, StateMutationProposal, StateProjection (E3
   Slice A).
@@ -88,7 +90,8 @@ Organised in three tiers by dependency layer.
 - `aaf-federation` — cell config + cross-cell router with
   entity-space agreements.
 - `aaf-server` — reference binary + CLI (`run`, `validate`,
-  `discover`, `compile`, `ontology lint`, `ontology import`).
+  `discover`, `compile`, `ontology lint`, `ontology import`,
+  `identity generate|verify|export-sbom`).
 
 For details see
 [../development/crate-reference.md](../development/crate-reference.md).
@@ -170,9 +173,26 @@ make ontology-lint                                            # gate 5
 
 Or all at once: `make ci`.
 
-Current status (iteration 8): **268 tests passing, 0 failures,
+Current status: **554 tests passing, 0 failures,
 0 build warnings, 0 clippy warnings, 9/9 examples validating,
 100% ontology adoption in strict mode, 0 lint errors.**
+
+---
+
+## Wave 4 — Critical infrastructure (planned)
+
+Three prerequisites for framework viability are designed and
+ready for implementation (see `PROJECT.md` §20):
+
+| Enhancement | What it adds |
+|---|---|
+| **F2** LLM Integration | Real providers (Anthropic, OpenAI, local), value-based routing, ProviderMetrics |
+| **F1** Developer Experience | Python/TypeScript/Go SDKs, CLI, code generation |
+| **F3** Protocol Bridges | MCP client/server, A2A participant, governed external calls |
+
+New rules: R34 (SDKs generated), R35 (providers observable),
+R36 (bridges governed), R37 (SDK ergonomics), R38 (bridge
+failures graceful).
 
 ---
 
@@ -187,3 +207,9 @@ Current status (iteration 8): **268 tests passing, 0 failures,
   — modular monolith wrapper integration
 - [integration-cell-architecture.md](integration-cell-architecture.md)
   — cell architecture federation
+- [enhancements/f2-llm-integration.md](enhancements/f2-llm-integration.md) —
+  live LLM integration design
+- [enhancements/f1-developer-experience.md](enhancements/f1-developer-experience.md) —
+  SDK and CLI design
+- [enhancements/f3-protocol-bridges.md](enhancements/f3-protocol-bridges.md) —
+  MCP + A2A bridge design

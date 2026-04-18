@@ -34,6 +34,9 @@ PREFIX_TO_SCHEMA: dict[str, str] = {
     "policy-pack":      "policy-pack.schema.json",
     "saga-":            "saga-definition.schema.json",
     "intent-":          "intent-envelope.schema.json",
+    # Enhancement X1 — Agent Identity
+    "manifest-":        "agent-manifest.schema.json",
+    "sbom-":            "agent-sbom.schema.json",
     # Enhancement E1 / E2 / E3
     "app-event":        "app-event.schema.json",
     "eval-suite":       "eval-suite.schema.json",
