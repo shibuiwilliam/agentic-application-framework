@@ -1,0 +1,11 @@
+target/
+.git/
+.github/
+.githooks/
+*.md
+!README.md
+sdk/
+ui/
+deploy/
+docs/
+development/
